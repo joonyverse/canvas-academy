@@ -2,8 +2,8 @@ import React from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import ActivityBar from './ActivityBar';
 import ExampleList from './ExampleList';
-import FileExplorer from './FileExplorer';
-import ProjectExplorer from './ProjectExplorer';
+import VscodeExplorer from './VscodeExplorer';
+import VscodeProjects from './VscodeProjects';
 import CodeEditor from './CodeEditor';
 import CanvasPreview from './CanvasPreview';
 import { PANEL_SIZES } from '../constants/panelConstants';
@@ -108,7 +108,34 @@ const Layout: React.FC<LayoutProps> = ({
               className={activePanel === null ? 'pointer-events-none' : ''}
             >
               <div className={`h-full ${activePanel === null ? 'opacity-0' : 'opacity-100'}`}>
-                <ProjectExplorer
+                <VscodeExplorer
+                  project={project}
+                  onFileSelect={onFileSelect}
+                  onFileCreate={onFileCreate}
+                  onFileRename={onFileRename}
+                  onFileDelete={onFileDelete}
+                  onFolderToggle={onFolderToggle}
+                />
+              </div>
+            </Panel>
+            <PanelResizeHandle className="w-1 bg-gray-200 hover:bg-gray-300 transition-colors" />
+          </>
+        )}
+
+        {(activePanel === 'projects' || (activePanel === null && lastActivePanel === 'projects')) && (
+          <>
+            <Panel
+              id="projects-panel"
+              order={1}
+              ref={sidebarPanelRef}
+              defaultSize={activePanel === 'projects' ? PANEL_SIZES.DEFAULT_SIDE_PANEL : PANEL_SIZES.MIN_SIDE_PANEL}
+              minSize={PANEL_SIZES.MIN_SIDE_PANEL}
+              maxSize={PANEL_SIZES.MAX_PROJECTS}
+              collapsible={true}
+              className={activePanel === null ? 'pointer-events-none' : ''}
+            >
+              <div className={`h-full ${activePanel === null ? 'opacity-0' : 'opacity-100'}`}>
+                <VscodeProjects
                   onProjectLoad={onProjectLoad}
                 />
               </div>

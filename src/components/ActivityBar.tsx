@@ -1,9 +1,9 @@
 import React from 'react';
-import { FolderOpen, Folder, BookOpen, Book } from 'lucide-react';
+import { FolderOpen, Folder, BookOpen, Book, Files, FileText } from 'lucide-react';
 
 interface ActivityBarProps {
-  activePanel: 'examples' | 'explorer' | null;
-  onPanelToggle: (panel: 'examples' | 'explorer') => void;
+  activePanel: 'examples' | 'explorer' | 'projects' | null;
+  onPanelToggle: (panel: 'examples' | 'explorer' | 'projects') => void;
 }
 
 const ActivityBar: React.FC<ActivityBarProps> = ({
@@ -19,17 +19,29 @@ const ActivityBar: React.FC<ActivityBarProps> = ({
             ? 'bg-gray-700 text-white border-r-2 border-blue-500'
             : 'text-gray-400 hover:text-white hover:bg-gray-700'
           }`}
-        title="Toggle File Explorer"
+        title="Explorer"
       >
         {activePanel === 'explorer' ? <FolderOpen size={20} /> : <Folder size={20} />}
       </button>
+      
+      <button
+        onClick={() => onPanelToggle('projects')}
+        className={`w-full h-12 flex items-center justify-center transition-colors ${activePanel === 'projects'
+            ? 'bg-gray-700 text-white border-r-2 border-blue-500'
+            : 'text-gray-400 hover:text-white hover:bg-gray-700'
+          }`}
+        title="Projects"
+      >
+        {activePanel === 'projects' ? <Files size={20} /> : <FileText size={20} />}
+      </button>
+
       <button
         onClick={() => onPanelToggle('examples')}
         className={`w-full h-12 flex items-center justify-center transition-colors ${activePanel === 'examples'
           ? 'bg-gray-700 text-white border-r-2 border-blue-500'
           : 'text-gray-400 hover:text-white hover:bg-gray-700'
           }`}
-        title="Toggle Example List"
+        title="Examples"
       >
         {activePanel === 'examples' ? <BookOpen size={20} /> : <Book size={20} />}
       </button>

@@ -1,6 +1,6 @@
 import { ImperativePanelHandle } from 'react-resizable-panels';
 
-export type PanelType = 'examples' | 'explorer' | null;
+export type PanelType = 'examples' | 'explorer' | 'projects' | null;
 
 export interface PanelState {
   activePanel: PanelType;
