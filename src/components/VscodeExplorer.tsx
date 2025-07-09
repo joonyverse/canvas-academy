@@ -11,7 +11,7 @@ import {
   ChevronDown,
   Code,
   Copy,
-  Cut,
+  Scissors,
   Clipboard,
   Download,
   Upload,
@@ -244,7 +244,7 @@ const FileItemComponent: React.FC<FileItemProps> = ({
                   }}
                   className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-gray-200 flex items-center space-x-2"
                 >
-                  <Cut className="w-3 h-3" />
+                  <Scissors className="w-3 h-3" />
                   <span>Cut</span>
                 </button>
                 <button
@@ -266,7 +266,7 @@ const FileItemComponent: React.FC<FileItemProps> = ({
                   disabled
                   className="w-full px-3 py-2 text-left text-sm text-gray-500 cursor-not-allowed flex items-center space-x-2"
                 >
-                  <Cut className="w-3 h-3" />
+                  <Scissors className="w-3 h-3" />
                   <span>Cut</span>
                 </button>
                 <button
