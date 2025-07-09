@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import { type Project, type ProjectFile } from '../lib/database'
+import { type Project, type ProjectFile, updateProjectFile as updateProjectFileApi } from '../lib/database'
 import { useAuth } from './AuthContext'
 
 interface ProjectContextType {
@@ -14,6 +14,9 @@ interface ProjectContextType {
   deleteProjectFile: (fileId: string) => void
   getActiveFile: () => ProjectFile | null
   clearProject: () => void
+  saveActiveFile: (content: string) => Promise<void>
+  hasUnsavedChanges: boolean
+  setHasUnsavedChanges: (hasChanges: boolean) => void
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined)
@@ -35,6 +38,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
   const [activeProject, setActiveProject] = useState<Project | null>(null)
   const [projectFiles, setProjectFiles] = useState<ProjectFile[]>([])
   const [activeFileId, setActiveFileId] = useState<string | null>(null)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 
   // Clear project when user signs out
   useEffect(() => {
@@ -78,6 +82,20 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     setActiveProject(null)
     setProjectFiles([])
     setActiveFileId(null)
+    setHasUnsavedChanges(false)
+  }
+
+  const saveActiveFile = async (content: string) => {
+    if (!activeFileId) return
+    
+    try {
+      await updateProjectFileApi(activeFileId, { content })
+      updateProjectFile(activeFileId, { content })
+      setHasUnsavedChanges(false)
+    } catch (error) {
+      console.error('Error saving file:', error)
+      throw error
+    }
   }
 
   const value: ProjectContextType = {
@@ -91,7 +109,10 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     addProjectFile,
     deleteProjectFile,
     getActiveFile,
-    clearProject
+    clearProject,
+    saveActiveFile,
+    hasUnsavedChanges,
+    setHasUnsavedChanges
   }
 
   return (

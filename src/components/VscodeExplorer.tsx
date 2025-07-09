@@ -12,7 +12,7 @@ import {
   Code
 } from 'lucide-react'
 import { useProject } from '../contexts/ProjectContext'
-import { createProjectFile, updateProjectFile, deleteProjectFile as deleteProjectFileApi } from '../lib/database'
+import { createProjectFile, updateProjectFile, deleteProjectFile as deleteProjectFileApi, updateProject } from '../lib/database'
 import { type ProjectFile } from '../lib/database'
 
 interface VscodeExplorerProps {
@@ -38,6 +38,7 @@ interface FileItemProps {
   onDelete: (fileId: string) => void
   onToggle: (folderId: string) => void
   onCreateChild: (name: string, type: 'file' | 'folder', parentId: string) => void
+  onMove: (fileId: string, newParentId: string | null) => void
 }
 
 const FileItemComponent: React.FC<FileItemProps> = ({
@@ -48,11 +49,16 @@ const FileItemComponent: React.FC<FileItemProps> = ({
   onRename,
   onDelete,
   onToggle,
-  onCreateChild
+  onCreateChild,
+  onMove
 }) => {
   const [isRenaming, setIsRenaming] = useState(false)
   const [newName, setNewName] = useState(item.name)
   const [showContextMenu, setShowContextMenu] = useState(false)
+  const [showCreateInput, setShowCreateInput] = useState<{ type: 'file' | 'folder' | null }>({ type: null })
+  const [newItemName, setNewItemName] = useState('')
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragOver, setDragOver] = useState(false)
 
   const handleRename = () => {
     if (newName.trim() && newName !== item.name) {
@@ -89,13 +95,53 @@ const FileItemComponent: React.FC<FileItemProps> = ({
     }
   }
 
+  const handleDragStart = (e: React.DragEvent) => {
+    setIsDragging(true)
+    e.dataTransfer.setData('text/plain', item.id)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragEnd = () => {
+    setIsDragging(false)
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (item.type === 'folder') {
+      e.preventDefault()
+      e.dataTransfer.dropEffect = 'move'
+      setDragOver(true)
+    }
+  }
+
+  const handleDragLeave = () => {
+    setDragOver(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(false)
+    
+    if (item.type === 'folder') {
+      const draggedItemId = e.dataTransfer.getData('text/plain')
+      if (draggedItemId && draggedItemId !== item.id) {
+        onMove(draggedItemId, item.id)
+      }
+    }
+  }
+
   return (
     <div>
       <div
         className={`flex items-center py-1 px-2 hover:bg-gray-700 cursor-pointer group relative text-sm ${
           activeFileId === item.id ? 'bg-gray-600' : ''
-        }`}
+        } ${isDragging ? 'opacity-50' : ''} ${dragOver ? 'bg-blue-600' : ''}`}
         style={{ paddingLeft: `${level * 12 + 8}px` }}
+        draggable
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
         onClick={() => {
           if (item.type === 'folder') {
             onToggle(item.id)
@@ -163,10 +209,7 @@ const FileItemComponent: React.FC<FileItemProps> = ({
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
-                    const name = prompt('File name:')
-                    if (name) {
-                      onCreateChild(name, 'file', item.id)
-                    }
+                    setShowCreateInput({ type: 'file' })
                     setShowContextMenu(false)
                   }}
                   className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-gray-200 flex items-center space-x-2"
@@ -177,10 +220,7 @@ const FileItemComponent: React.FC<FileItemProps> = ({
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
-                    const name = prompt('Folder name:')
-                    if (name) {
-                      onCreateChild(name, 'folder', item.id)
-                    }
+                    setShowCreateInput({ type: 'folder' })
                     setShowContextMenu(false)
                   }}
                   className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-gray-200 flex items-center space-x-2"
@@ -205,6 +245,47 @@ const FileItemComponent: React.FC<FileItemProps> = ({
         )}
       </div>
 
+      {/* Inline create input */}
+      {showCreateInput.type && (
+        <div
+          className="flex items-center py-1 px-2 text-sm"
+          style={{ paddingLeft: `${(level + 1) * 12 + 8}px` }}
+        >
+          <div className="mr-2 flex-shrink-0">
+            {showCreateInput.type === 'folder' ? (
+              <Folder className="w-4 h-4 text-blue-400" />
+            ) : (
+              <File className="w-4 h-4 text-gray-400" />
+            )}
+          </div>
+          <input
+            type="text"
+            value={newItemName}
+            onChange={(e) => setNewItemName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && newItemName.trim()) {
+                onCreateChild(newItemName.trim(), showCreateInput.type!, item.id)
+                setNewItemName('')
+                setShowCreateInput({ type: null })
+              } else if (e.key === 'Escape') {
+                setNewItemName('')
+                setShowCreateInput({ type: null })
+              }
+            }}
+            onBlur={() => {
+              if (newItemName.trim()) {
+                onCreateChild(newItemName.trim(), showCreateInput.type!, item.id)
+              }
+              setNewItemName('')
+              setShowCreateInput({ type: null })
+            }}
+            placeholder={`${showCreateInput.type === 'folder' ? 'Folder' : 'File'} name...`}
+            className="flex-1 px-1 py-0 text-sm bg-gray-800 text-white border border-blue-500 rounded"
+            autoFocus
+          />
+        </div>
+      )}
+
       {/* Render children if folder is open */}
       {item.type === 'folder' && item.is_open && item.children && (
         <div>
@@ -219,6 +300,7 @@ const FileItemComponent: React.FC<FileItemProps> = ({
               onDelete={onDelete}
               onToggle={onToggle}
               onCreateChild={onCreateChild}
+              onMove={onMove}
             />
           ))}
         </div>
@@ -240,6 +322,8 @@ const VscodeExplorer: React.FC<VscodeExplorerProps> = ({ onCodeChange }) => {
   const [isExpanded, setIsExpanded] = useState(true)
   const [showCreateMenu, setShowCreateMenu] = useState(false)
   const [fileTree, setFileTree] = useState<FileTreeItem[]>([])
+  const [showRootCreateInput, setShowRootCreateInput] = useState<{ type: 'file' | 'folder' | null }>({ type: null })
+  const [newRootItemName, setNewRootItemName] = useState('')
 
   // Build file tree from flat array
   useEffect(() => {
@@ -291,6 +375,11 @@ const VscodeExplorer: React.FC<VscodeExplorerProps> = ({ onCodeChange }) => {
     if (file && file.type === 'file' && onCodeChange) {
       onCodeChange(file.content || '')
     }
+    
+    // Update project's active file
+    if (activeProject && activeProject.active_file_id !== fileId) {
+      updateProject(activeProject.id, { active_file_id: fileId })
+    }
   }
 
   const handleFileRename = async (fileId: string, newName: string) => {
@@ -339,6 +428,15 @@ const VscodeExplorer: React.FC<VscodeExplorerProps> = ({ onCodeChange }) => {
       addProjectFile(newFile)
     } catch (error) {
       console.error('Error creating file:', error)
+    }
+  }
+
+  const handleFileMove = async (fileId: string, newParentId: string | null) => {
+    try {
+      await updateProjectFile(fileId, { parent_id: newParentId })
+      updateProjectFile(fileId, { parent_id: newParentId })
+    } catch (error) {
+      console.error('Error moving file:', error)
     }
   }
 
@@ -403,10 +501,7 @@ const VscodeExplorer: React.FC<VscodeExplorerProps> = ({ onCodeChange }) => {
                     <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-600 rounded-md shadow-lg z-10 min-w-32">
                       <button
                         onClick={() => {
-                          const name = prompt('File name:')
-                          if (name) {
-                            handleFileCreate(name, 'file')
-                          }
+                          setShowRootCreateInput({ type: 'file' })
                           setShowCreateMenu(false)
                         }}
                         className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-gray-200 flex items-center space-x-2"
@@ -416,10 +511,7 @@ const VscodeExplorer: React.FC<VscodeExplorerProps> = ({ onCodeChange }) => {
                       </button>
                       <button
                         onClick={() => {
-                          const name = prompt('Folder name:')
-                          if (name) {
-                            handleFileCreate(name, 'folder')
-                          }
+                          setShowRootCreateInput({ type: 'folder' })
                           setShowCreateMenu(false)
                         }}
                         className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-gray-200 flex items-center space-x-2"
@@ -434,7 +526,20 @@ const VscodeExplorer: React.FC<VscodeExplorerProps> = ({ onCodeChange }) => {
             </div>
 
             {/* File Tree */}
-            <div className="py-1">
+            <div 
+              className="py-1"
+              onDragOver={(e) => {
+                e.preventDefault()
+                e.dataTransfer.dropEffect = 'move'
+              }}
+              onDrop={(e) => {
+                e.preventDefault()
+                const draggedItemId = e.dataTransfer.getData('text/plain')
+                if (draggedItemId) {
+                  handleFileMove(draggedItemId, null) // Move to root
+                }
+              }}
+            >
               {fileTree.map((file) => (
                 <FileItemComponent
                   key={file.id}
@@ -446,8 +551,47 @@ const VscodeExplorer: React.FC<VscodeExplorerProps> = ({ onCodeChange }) => {
                   onDelete={handleFileDelete}
                   onToggle={handleFolderToggle}
                   onCreateChild={handleFileCreate}
+                  onMove={handleFileMove}
                 />
               ))}
+              
+              {/* Root level create input */}
+              {showRootCreateInput.type && (
+                <div className="flex items-center py-1 px-2 text-sm" style={{ paddingLeft: '8px' }}>
+                  <div className="mr-2 flex-shrink-0">
+                    {showRootCreateInput.type === 'folder' ? (
+                      <Folder className="w-4 h-4 text-blue-400" />
+                    ) : (
+                      <File className="w-4 h-4 text-gray-400" />
+                    )}
+                  </div>
+                  <input
+                    type="text"
+                    value={newRootItemName}
+                    onChange={(e) => setNewRootItemName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newRootItemName.trim()) {
+                        handleFileCreate(newRootItemName.trim(), showRootCreateInput.type!)
+                        setNewRootItemName('')
+                        setShowRootCreateInput({ type: null })
+                      } else if (e.key === 'Escape') {
+                        setNewRootItemName('')
+                        setShowRootCreateInput({ type: null })
+                      }
+                    }}
+                    onBlur={() => {
+                      if (newRootItemName.trim()) {
+                        handleFileCreate(newRootItemName.trim(), showRootCreateInput.type!)
+                      }
+                      setNewRootItemName('')
+                      setShowRootCreateInput({ type: null })
+                    }}
+                    placeholder={`${showRootCreateInput.type === 'folder' ? 'Folder' : 'File'} name...`}
+                    className="flex-1 px-1 py-0 text-sm bg-gray-800 text-white border border-blue-500 rounded"
+                    autoFocus
+                  />
+                </div>
+              )}
             </div>
           </div>
         </>

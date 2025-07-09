@@ -1,7 +1,8 @@
 import React, { useRef, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
-import { Play, RotateCcw, Copy, Check, Settings, Download, Upload, Maximize2, Minimize2, AlertTriangle } from 'lucide-react';
+import { Play, RotateCcw, Copy, Check, Settings, Download, Upload, Maximize2, Minimize2, AlertTriangle, Save } from 'lucide-react';
 import { validateAndSanitizeFile } from '../utils/fileValidation';
+import { useProject } from '../contexts/ProjectContext';
 
 interface CodeEditorProps {
   code: string;
@@ -11,11 +12,13 @@ interface CodeEditorProps {
 }
 
 const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset }) => {
+  const { saveActiveFile, hasUnsavedChanges, setHasUnsavedChanges, getActiveFile } = useProject()
   const [copied, setCopied] = React.useState(false);
   const [isFullscreen, setIsFullscreen] = React.useState(false);
   const [showSettings, setShowSettings] = React.useState(false);
   const [uploadError, setUploadError] = React.useState<string | null>(null);
   const [isUploading, setIsUploading] = React.useState(false);
+  const [isSaving, setIsSaving] = React.useState(false);
   const [editorSettings, setEditorSettings] = React.useState({
     fontSize: 14,
     wordWrap: 'on' as 'on' | 'off',
@@ -25,6 +28,43 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
   });
   const editorRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSave = async () => {
+    if (!getActiveFile()) return;
+    
+    try {
+      setIsSaving(true);
+      await saveActiveFile(code);
+    } catch (error) {
+      console.error('Failed to save file:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCodeChange = (value: string | undefined) => {
+    const newCode = value || '';
+    onChange(newCode);
+    
+    // Check if content has changed
+    const activeFile = getActiveFile();
+    if (activeFile && activeFile.content !== newCode) {
+      setHasUnsavedChanges(true);
+    }
+  };
+
+  // Handle Ctrl+S keyboard shortcut
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+        event.preventDefault();
+        handleSave();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [code]);
 
   const handleCopy = async () => {
     try {
@@ -180,6 +220,20 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
         <h3 className="text-lg font-semibold text-gray-900">Code Editor</h3>
         <div className="flex items-center space-x-2">
           <button
+            onClick={handleSave}
+            disabled={isSaving || !getActiveFile()}
+            className={`flex items-center space-x-2 px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${
+              hasUnsavedChanges 
+                ? 'text-blue-700 bg-blue-50 border-blue-300 hover:bg-blue-100' 
+                : 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50'
+            } disabled:bg-gray-200 disabled:cursor-not-allowed`}
+            title="Save File (Ctrl+S)"
+          >
+            <Save className="w-4 h-4" />
+            <span>{isSaving ? 'Saving...' : hasUnsavedChanges ? 'Save*' : 'Save'}</span>
+          </button>
+          
+          <button
             onClick={() => setShowSettings(!showSettings)}
             className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
             title="Settings"
@@ -332,7 +386,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
           height="100%"
           defaultLanguage="javascript"
           value={code}
-          onChange={handleEditorChange}
+          onChange={handleCodeChange}
           onMount={handleEditorDidMount}
           theme={editorSettings.theme}
           options={{
