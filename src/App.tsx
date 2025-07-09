@@ -93,6 +93,7 @@ function App() {
             onFileDelete={deleteFile}
             onFolderToggle={toggleFolder}
             onCodeChange={handleCodeChange}
+            onProjectLoad={handleProjectLoad}
           />
 
           {exampleState.selectedExample && (

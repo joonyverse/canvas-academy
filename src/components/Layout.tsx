@@ -3,11 +3,13 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import ActivityBar from './ActivityBar';
 import ExampleList from './ExampleList';
 import FileExplorer from './FileExplorer';
+import ProjectExplorer from './ProjectExplorer';
 import CodeEditor from './CodeEditor';
 import CanvasPreview from './CanvasPreview';
 import { PANEL_SIZES } from '../constants/panelConstants';
 import { Example } from '../types';
 import { Project } from '../hooks/useProject';
+import { type Project as DatabaseProject } from '../lib/database';
 import type { UsePanelStateReturn } from '../types/panel';
 import type { UseExampleStateReturn } from '../types/example';
 
@@ -27,6 +29,7 @@ interface LayoutProps {
   onFileDelete: (fileId: string) => void;
   onFolderToggle: (folderId: string) => void;
   onCodeChange: (newCode: string) => void;
+  onProjectLoad?: (project: DatabaseProject) => void;
 }
 
 const Layout: React.FC<LayoutProps> = ({
@@ -40,6 +43,7 @@ const Layout: React.FC<LayoutProps> = ({
   onFileDelete,
   onFolderToggle,
   onCodeChange,
+  onProjectLoad,
 }) => {
   const {
     activePanel,
@@ -104,13 +108,8 @@ const Layout: React.FC<LayoutProps> = ({
               className={activePanel === null ? 'pointer-events-none' : ''}
             >
               <div className={`h-full ${activePanel === null ? 'opacity-0' : 'opacity-100'}`}>
-                <FileExplorer
-                  project={project}
-                  onFileSelect={onFileSelect}
-                  onFileCreate={onFileCreate}
-                  onFileRename={onFileRename}
-                  onFileDelete={onFileDelete}
-                  onFolderToggle={onFolderToggle}
+                <ProjectExplorer
+                  onProjectLoad={onProjectLoad}
                 />
               </div>
             </Panel>
