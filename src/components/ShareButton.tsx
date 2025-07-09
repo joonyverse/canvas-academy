@@ -103,11 +103,10 @@ const ShareButton: React.FC<ShareButtonProps> = ({ example, currentCode, classNa
     <div className={`relative ${className}`} ref={dropdownRef}>
       <button
         onClick={() => setShowShareMenu(!showShareMenu)}
-        className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+        className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
         title="Share this example"
       >
         <Share2 className="w-4 h-4" />
-        <span>Share</span>
       </button>
 
       {showShareMenu && (
