@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback } from 'react';
 import Header from './components/Header';
 import Layout from './components/Layout';
+import ConfirmDialog from './components/ConfirmDialog';
 import { Example } from './types';
 import { examples } from './data/examples';
 import { useProject } from './hooks/useProject';
@@ -115,6 +116,17 @@ function App() {
               </div>
             </div>
           )}
+
+          <ConfirmDialog
+            isOpen={exampleState.dialogState.isOpen}
+            title={exampleState.dialogState.title}
+            message={exampleState.dialogState.message}
+            confirmText={exampleState.dialogState.confirmText}
+            cancelText={exampleState.dialogState.cancelText}
+            variant={exampleState.dialogState.variant}
+            onConfirm={exampleState.dialogState.onConfirm}
+            onCancel={exampleState.dialogState.onCancel}
+          />
         </div>
       </ErrorBoundary>
     </AuthProvider>

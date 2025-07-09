@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Example } from '../types';
 import type { UseExampleStateReturn } from '../types/example';
+import { useConfirmDialog } from './useConfirmDialog';
 
 interface UseExampleStateProps {
   currentCode: string;
@@ -17,19 +18,24 @@ export const useExampleState = ({
 }: UseExampleStateProps): UseExampleStateReturn => {
   const [selectedExample, setSelectedExample] = useState<Example | null>(null);
   const [isRunning, setIsRunning] = useState(false);
+  const { dialogState, showConfirmDialog } = useConfirmDialog();
 
   // Memoize the setter to prevent unnecessary re-renders
   const setSelectedExampleMemo = useCallback((example: Example | null) => {
     setSelectedExample(example);
   }, []);
 
-  const handleExampleSelect = useCallback((example: Example) => {
+  const handleExampleSelect = useCallback(async (example: Example) => {
     // Check if there are unsaved changes
     const hasUnsavedChanges = currentCode !== (selectedExample?.code || '');
     if (hasUnsavedChanges) {
-      const confirmChange = window.confirm(
-        'You have unsaved changes. Loading a new example will discard your current work. Do you want to continue?'
-      );
+      const confirmChange = await showConfirmDialog({
+        title: 'Unsaved Changes',
+        message: 'You have unsaved changes. Loading a new example will discard your current work. Do you want to continue?',
+        confirmText: 'Discard & Continue',
+        cancelText: 'Keep Working',
+        variant: 'warning'
+      });
       if (!confirmChange) {
         return; // Don't change example if user cancels
       }
@@ -43,7 +49,7 @@ export const useExampleState = ({
       updateFileContent(activeFileId, example.code);
       setIsRunning(false);
     }
-  }, [currentCode, selectedExample?.code, updateUrl, activeFileId, updateFileContent]);
+  }, [currentCode, selectedExample?.code, updateUrl, activeFileId, updateFileContent, showConfirmDialog]);
 
   const handleRun = useCallback(() => {
     setIsRunning(true);
@@ -68,5 +74,6 @@ export const useExampleState = ({
     handleStop,
     handleReset,
     setSelectedExample: setSelectedExampleMemo,
+    dialogState,
   };
 };

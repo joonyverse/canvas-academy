@@ -3,6 +3,16 @@ import { Example } from '../types';
 export interface ExampleState {
   selectedExample: Example | null;
   isRunning: boolean;
+  dialogState: {
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    variant?: 'danger' | 'warning' | 'info';
+    onConfirm: () => void;
+    onCancel: () => void;
+  };
 }
 
 export interface ExampleActions {
