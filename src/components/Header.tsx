@@ -17,7 +17,7 @@ const Header: React.FC<HeaderProps> = ({ selectedExample, currentCode }) => {
         <div className="flex items-center justify-center w-6 h-6 bg-blue-600 rounded">
           <Code className="w-4 h-4 text-white" />
         </div>
-        <h1 className="text-lg font-semibold text-gray-900">Canvas Academy</h1>
+        <h1 className="text-lg font-semibold text-gray-900 font-mont">Canvas Academy</h1>
       </div>
 
       {/* Actions */}
