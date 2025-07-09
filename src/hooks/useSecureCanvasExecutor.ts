@@ -17,9 +17,8 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
   const executionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const activeAnimationFrames = useRef<Set<number>>(new Set());
-  const eventListeners = useRef<Array<{type: string, listener: EventListener}>>([]);
+  const eventListeners = useRef<Array<{ type: string, listener: EventListener }>>([]);
   const [isReady, setIsReady] = useState(false);
-  const [isExecuting, setIsExecuting] = useState(false);
   const [logs, setLogs] = useState<Array<{ level: string; args: any[] }>>([]);
 
   const { onError, onConsole, maxExecutionTime = 10000 } = options;
@@ -41,14 +40,12 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
         return;
       }
 
-      setIsExecuting(true);
       setLogs([]);
 
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
-      
+
       if (!ctx) {
-        setIsExecuting(false);
         resolve({ success: false, error: 'Unable to get canvas context' });
         return;
       }
@@ -56,7 +53,7 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
       try {
         // Clear canvas before execution
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
+
         // Clear all previous animation frames before starting new execution
         activeAnimationFrames.current.forEach(id => {
           cancelAnimationFrame(id);
@@ -64,7 +61,7 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
         activeAnimationFrames.current.clear();
         // Create secure execution environment
         const capturedLogs: Array<{ level: string; args: any[] }> = [];
-        
+
         const safeGlobals = {
           canvas,
           ctx,
@@ -148,7 +145,6 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
 
         // Set execution timeout
         executionTimeoutRef.current = setTimeout(() => {
-          setIsExecuting(false);
           resolve({ success: false, error: 'Execution timed out after 10 seconds' });
         }, maxExecutionTime);
 
@@ -171,7 +167,7 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
 
         const func = new Function(...Object.keys(safeGlobals), restrictedCode);
         func(...Object.values(safeGlobals));
-        
+
         // Clear timeout on successful execution
         if (executionTimeoutRef.current) {
           clearTimeout(executionTimeoutRef.current);
@@ -179,21 +175,19 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
         }
 
         setLogs(capturedLogs);
-        setIsExecuting(false);
         resolve({ success: true, logs: capturedLogs });
-        
+
       } catch (error) {
         if (executionTimeoutRef.current) {
           clearTimeout(executionTimeoutRef.current);
           executionTimeoutRef.current = null;
         }
-        
-        setIsExecuting(false);
-        
+
+
         // Enhanced error message with debugging info
         let errorMessage = 'Unknown error occurred';
         let debugInfo = '';
-        
+
         if (error instanceof Error) {
           errorMessage = error.message;
           if (error.stack) {
@@ -210,7 +204,7 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
             }
           }
         }
-        
+
         const fullErrorMessage = debugInfo ? `${errorMessage}\n\nLocation: ${debugInfo}` : errorMessage;
         onError?.(fullErrorMessage);
         resolve({ success: false, error: fullErrorMessage });
@@ -223,21 +217,19 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
       clearTimeout(executionTimeoutRef.current);
       executionTimeoutRef.current = null;
     }
-    
+
     // Cancel all active animation frames
     activeAnimationFrames.current.forEach(id => {
       cancelAnimationFrame(id);
     });
     activeAnimationFrames.current.clear();
     animationFrameRef.current = null;
-    
+
     // Remove all event listeners
     eventListeners.current.forEach(({ type, listener }) => {
       document.removeEventListener(type, listener);
     });
     eventListeners.current = [];
-    
-    setIsExecuting(false);
   }, []);
 
   const resizeCanvas = useCallback((width: number, height: number) => {
@@ -272,7 +264,6 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
     stopExecution,
     resizeCanvas,
     isReady, // Use actual state
-    isExecuting,
     logs
   };
 };

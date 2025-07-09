@@ -34,23 +34,23 @@ function App() {
   // Load example based on URL parameters or default to first example
   useEffect(() => {
     let exampleToLoad: Example | null = null;
-    
+
     // Check for direct example parameter (TinyURL will redirect to this)
     const exampleId = getParam('example');
     if (exampleId) {
       exampleToLoad = examples.find(ex => ex.id === exampleId) || null;
     }
-    
+
     // Default to first example if no URL parameter or invalid ID
     if (!exampleToLoad && examples.length > 0) {
       exampleToLoad = examples[0];
     }
-    
+
     if (exampleToLoad) {
       setSelectedExample(exampleToLoad);
       if (activeFile) {
         updateFileContent(activeFile.id, exampleToLoad.code);
-        setIsRunning(true);
+        setIsRunning(false);
       }
     }
   }, [activeFile?.id, getParam, updateFileContent]);
@@ -75,7 +75,7 @@ function App() {
     setSelectedExample(example);
     if (activeFile) {
       updateFileContent(activeFile.id, example.code);
-      setIsRunning(true);
+      setIsRunning(false);
     }
   };
 
@@ -86,17 +86,17 @@ function App() {
   };
 
   const handleRun = () => {
-    setIsRunning(false); // Reset first
-    setTimeout(() => {
-      setIsRunning(true); // Then trigger
-      setTimeout(() => setIsRunning(false), 100); // Reset after execution
-    }, 10);
+    setIsRunning(true);
+  };
+
+  const handleStop = () => {
+    setIsRunning(false);
   };
 
   const handleReset = () => {
     if (selectedExample && activeFile) {
       updateFileContent(activeFile.id, selectedExample.code);
-      setIsRunning(true);
+      setIsRunning(false);
     }
   };
 
@@ -142,6 +142,7 @@ function App() {
                 code={currentCode}
                 isRunning={isRunning}
                 onRun={handleRun}
+                onStop={handleStop}
               />
             </div>
           </div>

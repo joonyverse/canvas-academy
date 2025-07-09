@@ -6,9 +6,10 @@ interface CanvasPreviewProps {
   code: string;
   isRunning: boolean;
   onRun: () => void;
+  onStop: () => void;
 }
 
-const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun }) => {
+const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun, onStop }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = React.useState<string | null>(null);
@@ -31,7 +32,6 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
     executeCode,
     stopExecution,
     isReady,
-    isExecuting,
     logs
   } = useSecureCanvasExecutor({
     onError,
@@ -84,6 +84,7 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
 
   const stopAnimation = () => {
     stopExecution();
+    onStop();
   };
 
   const clearCanvas = React.useCallback(() => {
@@ -94,6 +95,7 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
       }
     }
     stopExecution();
+    onStop();
     setError(null);
   }, [stopExecution]);
 
@@ -123,6 +125,8 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
   useEffect(() => {
     if (isRunning) {
       executeUserCodeRef.current();
+    } else {
+      stopExecution();
     }
   }, [isRunning]); // Only depend on isRunning
 
@@ -161,10 +165,6 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
     };
   }, []);
 
-  const handleRun = () => {
-    onRun();
-  };
-
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-4 bg-gray-100 border-b border-gray-200">
@@ -180,7 +180,7 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
           </button>
 
           <button
-            onClick={handleRun}
+            onClick={isRunning ? clearCanvas : onRun}
             className={`flex items-center space-x-2 px-3 py-1.5 text-sm font-medium border ${isRunning ? 'text-red-600 bg-red-100 border-red-200 hover:bg-red-50' : 'text-white bg-blue-600 border-blue-700 hover:bg-blue-700'} rounded-lg transition-colors`}
             title="Run (Ctrl+Enter)"
           >
