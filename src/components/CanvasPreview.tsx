@@ -47,8 +47,14 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
     const newWidth = Math.max(400, Math.floor(containerRect.width - padding));
     const newHeight = Math.max(300, Math.floor(containerRect.height - padding - bottomSpace));
     
-    setCanvasSize({ width: newWidth, height: newHeight });
-    resizeCanvas(newWidth, newHeight);
+    // Only update if size actually changed to prevent unnecessary re-renders
+    setCanvasSize(prev => {
+      if (prev.width !== newWidth || prev.height !== newHeight) {
+        resizeCanvas(newWidth, newHeight);
+        return { width: newWidth, height: newHeight };
+      }
+      return prev;
+    });
   }, [resizeCanvas]);
 
   // Set up resize observer
@@ -98,7 +104,7 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
       setIsPaused(false);
       executeUserCode();
     }
-  }, [isRunning, executeUserCode]);
+  }, [isRunning]); // Remove executeUserCode from dependency array to prevent re-execution
 
   // Initialize canvas when component mounts
   useEffect(() => {
@@ -107,11 +113,16 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
     }
   }, [initializeCanvas]);
 
-  // Update canvas size when it changes
+  // Update canvas size when it changes (but don't re-execute code)
   useEffect(() => {
     if (canvasRef.current && isReady) {
       canvasRef.current.width = canvasSize.width;
       canvasRef.current.height = canvasSize.height;
+      // Only clear canvas, don't re-execute code automatically
+      const ctx = canvasRef.current.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      }
     }
   }, [canvasSize, isReady]);
 
