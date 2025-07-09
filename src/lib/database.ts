@@ -10,9 +10,13 @@ export type UserProgress = Database['public']['Tables']['user_progress']['Row']
 
 // Project operations
 export const saveProject = async (project: Omit<ProjectInsert, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) throw new Error('User not authenticated')
+
   const { data, error } = await supabase
     .from('projects')
-    .insert([project])
+    .insert([{ ...project, user_id: user.id }])
     .select()
     .single()
 
@@ -86,9 +90,13 @@ export const updateUserProfile = async (updates: Partial<UserProfile>) => {
 
 // User progress operations
 export const markExampleComplete = async (exampleId: string) => {
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) throw new Error('User not authenticated')
+
   const { data, error } = await supabase
     .from('user_progress')
-    .upsert([{ example_id: exampleId }])
+    .upsert([{ example_id: exampleId, user_id: user.id }])
     .select()
     .single()
 
