@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import Header from './components/Header';
 import Layout from './components/Layout';
+import StatusBar from './components/StatusBar';
 import ConfirmDialog from './components/ConfirmDialog';
 import { Example } from './types';
 import { examples } from './data/examples';
@@ -98,27 +99,7 @@ function App() {
               onProjectLoad={handleProjectLoad}
             />
 
-            {exampleState.selectedExample && (
-              <div className="bg-white border-t border-gray-200 p-4">
-                <div className="flex items-center space-x-4">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">{exampleState.selectedExample.title}</h3>
-                    <p className="text-sm text-gray-600">{exampleState.selectedExample.description}</p>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-500">Difficulty:</span>
-                      <span className={`px-2 py-1 text-xs font-medium rounded ${exampleState.selectedExample.difficulty === 'beginner' ? 'bg-green-100 text-green-800' :
-                          exampleState.selectedExample.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                        }`}>
-                        {exampleState.selectedExample.difficulty}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            <StatusBar selectedExample={exampleState.selectedExample} />
 
             <ConfirmDialog
               isOpen={exampleState.dialogState.isOpen}
