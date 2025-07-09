@@ -9,6 +9,7 @@ import { usePanelState } from './hooks/usePanelState';
 import { useExampleState } from './hooks/useExampleState';
 import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider } from './contexts/AuthContext';
+import { type Project } from './lib/database';
 
 function App() {
   const { getParam, updateUrl } = useUrlState();
@@ -64,6 +65,12 @@ function App() {
     }
   };
 
+  const handleProjectLoad = (project: Project) => {
+    if (activeFile) {
+      updateFileContent(activeFile.id, project.code);
+    }
+  };
+
   return (
     <AuthProvider>
       <ErrorBoundary>
@@ -71,6 +78,7 @@ function App() {
           <Header
             selectedExample={exampleState.selectedExample}
             currentCode={currentCode}
+            onProjectLoad={handleProjectLoad}
           />
 
           <Layout
