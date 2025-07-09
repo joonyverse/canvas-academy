@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
-import { Play, RotateCcw, Copy, Check, Settings, Download, Upload, Maximize2, Minimize2, AlertTriangle, Save } from 'lucide-react';
+import { RotateCcw, Copy, Check, Settings, Download, Upload, Maximize2, Minimize2, AlertTriangle, Save } from 'lucide-react';
 import { validateAndSanitizeFile } from '../utils/fileValidation';
 import { useProject } from '../contexts/ProjectContext';
 
@@ -127,12 +127,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
-    }
-  };
-
-  const handleEditorChange = (value: string | undefined) => {
-    if (value !== undefined) {
-      onChange(value);
     }
   };
 

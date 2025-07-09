@@ -2,30 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Monaco Editor cursor fix */
-.monaco-editor {
+.cursor {
     cursor: text !important;
+    color: #000000 !important;
 }
 
-.monaco-editor .monaco-editor-background {
+.monaco-editor .cursors-layer {
     cursor: text !important;
+    color: #000000 !important;
 }
 
-.monaco-editor .monaco-editor-background,
-.monaco-editor .monaco-editor-background .monaco-editor-background {
+.monaco-editor .cursors-layer .cursor {
     cursor: text !important;
+    color: #000000 !important;
 }
 
-/* Ensure Monaco editor container has proper cursor */
-.monaco-editor-container {
+.monaco-mouse-cursor-text {
     cursor: text !important;
+    color: #000000 !important;
 }
 
-/* Fix for any overlay elements that might hide cursor */
-.monaco-editor .monaco-editor-overlaymessage {
-    pointer-events: none !important;
+.cursor-pointer {
+    cursor: text !important;
+    color: #000000 !important;
 }
 
-.monaco-editor .monaco-editor-overlaymessage .message {
-    pointer-events: none !important;
+.monaco-editor .cursors-layer>.cursor {
+    overflow: text !important;
+    color: #000000 !important;
 }

@@ -1996,9 +1996,9 @@ function drawBranch(x, y, angle, length, depth, progress) {
       newLength,
       depth + 1,
       progress
-    );
+      );
     
-    // Right branch
+      // Right branch
     drawBranch(
       endX, endY,
       angle + angleVariation,
@@ -2007,196 +2007,11 @@ function drawBranch(x, y, angle, length, depth, progress) {
       progress
     );
   }
-}
-
-function animate() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-  // Gradient background
-  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  gradient.addColorStop(0, '#1a1a2e');
-  gradient.addColorStop(1, '#16213e');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
-  // Start drawing from bottom center
-  const startX = canvas.width / 2;
-  const startY = canvas.height - 50;
-  const startAngle = -Math.PI / 2;
-  const trunkLength = 80;
-  
-  // Animate growth
-  animationProgress += 0.01;
-  const growthProgress = Math.min(1, animationProgress);
-  
-  // Draw trunk
-  ctx.strokeStyle = '#8b4513';
-  ctx.lineWidth = 8;
-  ctx.beginPath();
-  ctx.moveTo(startX, startY);
-  ctx.lineTo(startX, startY - trunkLength * growthProgress);
-  ctx.stroke();
-  
-  // Draw fractal branches
-  if (growthProgress >= 1) {
-    drawBranch(
-      startX,
-      startY - trunkLength,
-      startAngle,
-      60,
-      0,
-      animationProgress - 1
-    );
-  }
   
   // Reset animation
   if (animationProgress > 8) {
     animationProgress = 0;
   }
-  
-  requestAnimationFrame(animate);
-}
-
-animate();`
-  },
-  {
-    id: 'physics-pendulum',
-    title: 'Physics Pendulum',
-    description: 'Realistic pendulum with physics simulation',
-    category: 'games',
-    difficulty: 'intermediate',
-    code: `// Canvas and context are already available as 'canvas' and 'ctx'
-
-let pendulums = [];
-
-class Pendulum {
-  constructor(x, y, length, angle, mass) {
-    this.originX = x;
-    this.originY = y;
-    this.length = length;
-    this.angle = angle;
-    this.angleVelocity = 0;
-    this.angleAcceleration = 0;
-    this.mass = mass;
-    this.damping = 0.999;
-    this.gravity = 0.4;
-  }
-  
-  update() {
-    // Physics calculation
-    this.angleAcceleration = (-this.gravity / this.length) * Math.sin(this.angle);
-    this.angleVelocity += this.angleAcceleration;
-    this.angleVelocity *= this.damping;
-    this.angle += this.angleVelocity;
-  }
-  
-  draw() {
-    const bobX = this.originX + this.length * Math.sin(this.angle);
-    const bobY = this.originY + this.length * Math.cos(this.angle);
-    
-    // Draw string
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(this.originX, this.originY);
-    ctx.lineTo(bobX, bobY);
-    ctx.stroke();
-    
-    // Draw pivot point
-    ctx.fillStyle = '#666666';
-    ctx.beginPath();
-    ctx.arc(this.originX, this.originY, 5, 0, 2 * Math.PI);
-    ctx.fill();
-    
-    // Draw bob
-    const gradient = ctx.createRadialGradient(
-      bobX - 5, bobY - 5, 0,
-      bobX, bobY, this.mass
-    );
-    gradient.addColorStop(0, '#ff6b6b');
-    gradient.addColorStop(1, '#d63031');
-    
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.arc(bobX, bobY, this.mass, 0, 2 * Math.PI);
-    ctx.fill();
-    
-    // Draw shadow
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.beginPath();
-    ctx.ellipse(bobX + 2, bobY + 2, this.mass * 0.8, this.mass * 0.4, 0, 0, 2 * Math.PI);
-    ctx.fill();
-  }
-}
-
-// Create multiple pendulums
-pendulums.push(new Pendulum(canvas.width / 2 - 100, 100, 150, Math.PI / 4, 15));
-pendulums.push(new Pendulum(canvas.width / 2, 100, 200, -Math.PI / 3, 20));
-pendulums.push(new Pendulum(canvas.width / 2 + 100, 100, 120, Math.PI / 6, 12));
-
-let isDragging = false;
-let dragIndex = -1;
-
-canvas.addEventListener('mousedown', (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const mouseX = e.clientX - rect.left;
-  const mouseY = e.clientY - rect.top;
-  
-  pendulums.forEach((pendulum, index) => {
-    const bobX = pendulum.originX + pendulum.length * Math.sin(pendulum.angle);
-    const bobY = pendulum.originY + pendulum.length * Math.cos(pendulum.angle);
-    const distance = Math.sqrt((mouseX - bobX) ** 2 + (mouseY - bobY) ** 2);
-    
-    if (distance < pendulum.mass) {
-      isDragging = true;
-      dragIndex = index;
-      pendulum.angleVelocity = 0;
-    }
-  });
-});
-
-canvas.addEventListener('mousemove', (e) => {
-  if (isDragging && dragIndex >= 0) {
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    
-    const pendulum = pendulums[dragIndex];
-    const dx = mouseX - pendulum.originX;
-    const dy = mouseY - pendulum.originY;
-    
-    pendulum.angle = Math.atan2(dx, dy);
-  }
-});
-
-canvas.addEventListener('mouseup', () => {
-  isDragging = false;
-  dragIndex = -1;
-});
-
-function animate() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-  // Background
-  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  gradient.addColorStop(0, '#2d3748');
-  gradient.addColorStop(1, '#1a202c');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
-  // Update and draw pendulums
-  pendulums.forEach(pendulum => {
-    if (!isDragging || pendulums.indexOf(pendulum) !== dragIndex) {
-      pendulum.update();
-    }
-    pendulum.draw();
-  });
-  
-  // Instructions
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-  ctx.font = '16px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText('Click and drag the pendulum bobs!', canvas.width / 2, 30);
   
   requestAnimationFrame(animate);
 }
@@ -2303,10 +2118,10 @@ function draw() {
   ctx.font = '14px Montserrat';
   ctx.fillStyle = '#222';
   ctx.textAlign = 'center';
-  ctx.fillText('기지국(원)과 단말(작은 원)을 드래그해보세요!', canvas.width/2, 30);
+  ctx.fillText('기지국(원)과 단말(작은 원)을 드래그해보세요!', canvas.width / 2, 30);
 }
 function animate() { draw(); requestAnimationFrame(animate); }
-animate();`
+animate(); `
   },
   {
     id: 'signal-strength-map',
@@ -2339,9 +2154,9 @@ function draw() {
       for (let dy = 0; dy < 2; dy++) for (let dx = 0; dx < 2; dx++) {
         let idx = 4 * ((y + dy) * canvas.width + (x + dx));
         img.data[idx] = 255 - c; // R
-        img.data[idx+1] = 255 - c; // G
-        img.data[idx+2] = 255; // B
-        img.data[idx+3] = 180;
+        img.data[idx + 1] = 255 - c; // G
+        img.data[idx + 2] = 255; // B
+        img.data[idx + 3] = 180;
       }
     }
   }
@@ -2363,9 +2178,9 @@ function draw() {
   ctx.font = '14px Montserrat';
   ctx.fillStyle = '#222';
   ctx.textAlign = 'center';
-  ctx.fillText('파란 원: 기지국, 회색: 장애물, 배경: 신호 세기', canvas.width/2, 30);
+  ctx.fillText('파란 원: 기지국, 회색: 장애물, 배경: 신호 세기', canvas.width / 2, 30);
 }
-draw();`
+draw(); `
   },
   {
     id: 'antenna-pattern',
@@ -2386,11 +2201,11 @@ function pattern(theta) {
 }
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const cx = canvas.width/2, cy = canvas.height/2, R = 120;
+  const cx = canvas.width / 2, cy = canvas.height / 2, R = 120;
   // 그리드
   ctx.strokeStyle = '#ddd';
   for (let r = 40; r <= R; r += 40) {
-    ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2*Math.PI); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI); ctx.stroke();
   }
   // 패턴
   ctx.beginPath();
@@ -2414,7 +2229,7 @@ function draw() {
   ctx.fillText('클릭 시 안테나 타입 변경 (Omni → Yagi → Beam)', cx, 30);
   ctx.fillText('현재 타입: ' + type, cx, 55);
 }
-draw();`
+draw(); `
   },
   {
     id: 'handover-simulation',
@@ -2469,7 +2284,7 @@ function draw() {
   ctx.font = '14px Montserrat';
   ctx.fillStyle = '#222';
   ctx.textAlign = 'center';
-  ctx.fillText('단말이 이동하며 신호가 가장 강한 기지국에 연결됩니다.', canvas.width/2, 30);
+  ctx.fillText('단말이 이동하며 신호가 가장 강한 기지국에 연결됩니다.', canvas.width / 2, 30);
 }
 function animate() {
   user.x += user.vx;
@@ -2478,7 +2293,7 @@ function animate() {
   draw();
   requestAnimationFrame(animate);
 }
-animate();`
+animate(); `
   },
   {
     id: 'cell-interference',
@@ -2966,5 +2781,489 @@ function draw() {
 }
 function animate() { draw(); requestAnimationFrame(animate); }
 animate(); `
+  },
+  {
+    id: 'phase-diagram',
+    title: 'Interactive Phase Diagram',
+    description: '물의 상태 변화를 보여주는 3D 페이저도 시각화',
+    category: 'wireless',
+    difficulty: 'advanced',
+    code: `// 물의 페이저도를 인터랙티브하게 시각화합니다.
+  class PhaseDiagram {
+    constructor() {
+      this.temperature = 25; // Celsius
+      this.pressure = 1; // atm
+      this.mouseX = 0;
+      this.mouseY = 0;
+      this.isDragging = false;
+      this.selectedPoint = null;
+
+      // 물의 상전이 데이터 (근사값)
+      this.triplePoint = { temp: 0.01, pressure: 0.006 };
+      this.criticalPoint = { temp: 374, pressure: 218 };
+      this.normalBoiling = { temp: 100, pressure: 1 };
+      this.normalFreezing = { temp: 0, pressure: 1 };
+
+      this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+      canvas.addEventListener('mousedown', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        this.mouseX = e.clientX - rect.left;
+        this.mouseY = e.clientY - rect.top;
+        this.isDragging = true;
+      });
+
+      canvas.addEventListener('mousemove', (e) => {
+        if (this.isDragging) {
+          const rect = canvas.getBoundingClientRect();
+          const newX = e.clientX - rect.left;
+          const newY = e.clientY - rect.top;
+
+          // 온도와 압력 조절
+          const tempRange = 400; // 0-400°C
+          const pressureRange = 250; // 0-250 atm
+
+          this.temperature = (newX / canvas.width) * tempRange;
+          this.pressure = ((canvas.height - newY) / canvas.height) * pressureRange;
+
+          this.temperature = Math.max(0, Math.min(400, this.temperature));
+          this.pressure = Math.max(0.001, Math.min(250, this.pressure));
+        }
+      });
+
+      canvas.addEventListener('mouseup', () => {
+        this.isDragging = false;
+      });
+    }
+
+    getPhase(temp, pressure) {
+      // 간단한 상 판정 로직
+      if (temp < 0.01) return 'solid';
+      if (temp > 374) return 'gas';
+      if (pressure < 0.006) return 'gas';
+      if (pressure > 218) return 'liquid';
+
+      // 상전이 곡선 근사
+      const boilingCurve = 100 + (pressure - 1) * 0.5;
+      const meltingCurve = 0 + (pressure - 1) * 0.01;
+
+      if (temp < meltingCurve) return 'solid';
+      if (temp > boilingCurve) return 'gas';
+      return 'liquid';
+    }
+
+    drawPhaseBoundaries() {
+      const ctx = this.ctx;
+
+      // 삼중점
+      const tripleX = (this.triplePoint.temp / 400) * canvas.width;
+      const tripleY = canvas.height - (this.triplePoint.pressure / 250) * canvas.height;
+
+      // 임계점
+      const criticalX = (this.criticalPoint.temp / 400) * canvas.width;
+      const criticalY = canvas.height - (this.criticalPoint.pressure / 250) * canvas.height;
+
+      // 상전이 곡선 그리기
+      ctx.strokeStyle = '#3B82F6';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+
+      // 고체-액체 경계 (거의 수직)
+      ctx.moveTo(tripleX, tripleY);
+      ctx.lineTo(tripleX, canvas.height);
+
+      // 액체-기체 경계 (끓는점 곡선)
+      ctx.moveTo(tripleX, tripleY);
+      for (let temp = 0.01; temp <= 374; temp += 5) {
+        const pressure = Math.pow(10, 5.40221 - 1838.675 / (temp + 233.424));
+        const x = (temp / 400) * canvas.width;
+        const y = canvas.height - (pressure / 250) * canvas.height;
+        if (temp === 0.01) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+
+      // 고체-기체 경계 (승화 곡선)
+      ctx.moveTo(tripleX, tripleY);
+      for (let temp = 0.01; temp >= -50; temp -= 5) {
+        const pressure = 0.006 * Math.pow(10, (temp - 0.01) / 50);
+        const x = ((temp + 50) / 450) * canvas.width;
+        const y = canvas.height - (pressure / 250) * canvas.height;
+        ctx.lineTo(x, y);
+      }
+
+      ctx.stroke();
+
+      // 특별한 점들 표시
+      ctx.fillStyle = '#EF4444';
+      ctx.beginPath();
+      ctx.arc(tripleX, tripleY, 8, 0, 2 * Math.PI);
+      ctx.fill();
+
+      ctx.fillStyle = '#10B981';
+      ctx.beginPath();
+      ctx.arc(criticalX, criticalY, 8, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+
+    drawCurrentPoint() {
+      const ctx = this.ctx;
+      const x = (this.temperature / 400) * canvas.width;
+      const y = canvas.height - (this.pressure / 250) * canvas.height;
+
+      const phase = this.getPhase(this.temperature, this.pressure);
+      const colors = {
+        solid: '#3B82F6',
+        liquid: '#10B981', 
+        gas: '#F59E0B'
+      };
+
+      // 현재 상태 표시
+      ctx.fillStyle = colors[phase];
+      ctx.beginPath();
+      ctx.arc(x, y, 12, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // 상태 정보 표시
+      ctx.fillStyle = '#000';
+      ctx.font = 'bold 16px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(\`\${ phase.toUpperCase() }\`, x, y - 25);
+      ctx.fillText(\`\${ this.temperature.toFixed(1) }°C\`, x, y + 25);
+      ctx.fillText(\`\${ this.pressure.toFixed(2) } atm\`, x, y + 45);
+    }
+
+    drawGrid() {
+      const ctx = this.ctx;
+
+      // 그리드
+      ctx.strokeStyle = '#E5E7EB';
+      ctx.lineWidth = 1;
+
+      // 수직선 (온도)
+      for (let temp = 0; temp <= 400; temp += 50) {
+        const x = (temp / 400) * canvas.width;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+
+      // 수평선 (압력)
+      for (let pressure = 0; pressure <= 250; pressure += 25) {
+        const y = canvas.height - (pressure / 250) * canvas.height;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+
+      // 축 라벨
+      ctx.fillStyle = '#6B7280';
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'center';
+
+      // 온도 축
+      for (let temp = 0; temp <= 400; temp += 100) {
+        const x = (temp / 400) * canvas.width;
+        ctx.fillText(\`\${ temp }°C\`, x, canvas.height - 10);
+      }
+
+      // 압력 축
+      ctx.save();
+      ctx.translate(20, canvas.height / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('Pressure (atm)', 0, 0);
+      ctx.restore();
+
+      for (let pressure = 0; pressure <= 250; pressure += 50) {
+        const y = canvas.height - (pressure / 250) * canvas.height;
+        ctx.fillText(\`\${ pressure }\`, 30, y + 4);
+      }
+    }
+
+    draw() {
+      this.ctx = ctx;
+
+      // 배경
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // 그리드
+      this.drawGrid();
+
+      // 상 경계
+      this.drawPhaseBoundaries();
+
+      // 현재 점
+      this.drawCurrentPoint();
+
+      // 범례
+      this.drawLegend();
+
+      // 안내
+      ctx.fillStyle = '#000';
+      ctx.font = '14px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('마우스를 드래그하여 온도와 압력을 조절하세요', canvas.width / 2, 30);
+      ctx.fillText('Interactive Phase Diagram of Water', canvas.width / 2, 50);
+    }
+
+    drawLegend() {
+      const ctx = this.ctx;
+      const legendX = canvas.width - 150;
+      const legendY = 100;
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.fillRect(legendX - 10, legendY - 10, 140, 120);
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(legendX - 10, legendY - 10, 140, 120);
+
+      ctx.font = 'bold 12px Arial';
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#000';
+      ctx.fillText('Legend:', legendX, legendY);
+
+      const items = [
+        { color: '#3B82F6', label: 'Solid (Ice)' },
+        { color: '#10B981', label: 'Liquid (Water)' },
+        { color: '#F59E0B', label: 'Gas (Steam)' },
+        { color: '#EF4444', label: 'Triple Point' },
+        { color: '#10B981', label: 'Critical Point' }
+      ];
+
+      items.forEach((item, i) => {
+        ctx.fillStyle = item.color;
+        ctx.beginPath();
+        ctx.arc(legendX, legendY + 20 + i * 20, 6, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.fillStyle = '#000';
+        ctx.font = '11px Arial';
+        ctx.fillText(item.label, legendX + 15, legendY + 25 + i * 20);
+      });
+    }
+  }
+
+  const phaseDiagram = new PhaseDiagram();
+
+  function animate() {
+    phaseDiagram.draw();
+    requestAnimationFrame(animate);
+  }
+
+  animate();`
+  },
+  {
+    id: 'realtime-audio-visualizer',
+    title: 'Real-time Audio Visualizer',
+    description: 'Visualize microphone input with a circular frequency spectrum.',
+    category: 'wireless',
+    difficulty: 'advanced',
+    code: `// Canvas and context are already available as 'canvas' and 'ctx'
+
+let audioContext;
+let analyser;
+let microphone;
+let dataArray;
+let bufferLength;
+let isAudioSupported = false;
+
+// Function to initialize audio with better error handling
+async function initAudio() {
+  try {
+    // Check if AudioContext is supported
+    if (typeof window.AudioContext === 'undefined' && typeof window.webkitAudioContext === 'undefined') {
+      throw new Error('AudioContext not supported in this browser');
+    }
+
+    // Create AudioContext with user interaction requirement
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // Check if audio context is in suspended state (needs user interaction)
+    if (audioContext.state === 'suspended') {
+      drawMessage('Click anywhere to start audio visualization');
+      canvas.addEventListener('click', resumeAudio, { once: true });
+      return;
+    }
+
+    await setupAudioAnalyser();
+    
+  } catch (err) {
+    console.error('Error initializing audio:', err);
+    drawMessage('Audio not supported: ' + err.message);
+    // Fallback to demo mode
+    startDemoMode();
+  }
+}
+
+async function resumeAudio() {
+  try {
+    await audioContext.resume();
+    await setupAudioAnalyser();
+  } catch (err) {
+    console.error('Error resuming audio:', err);
+    drawMessage('Failed to start audio: ' + err.message);
+    startDemoMode();
+  }
+}
+
+async function setupAudioAnalyser() {
+  try {
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 1024; // Reduced for better performance
+    bufferLength = analyser.frequencyBinCount;
+    dataArray = new Uint8Array(bufferLength);
+
+    microphone = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false
+      },
+      video: false,
+    });
+
+    const source = audioContext.createMediaStreamSource(microphone);
+    source.connect(analyser);
+    
+    isAudioSupported = true;
+    console.log('Audio initialized successfully!');
+    animate();
+    
+  } catch (err) {
+    console.error('Error setting up audio analyser:', err);
+    drawMessage('Microphone access denied: ' + err.message);
+    startDemoMode();
+  }
+}
+
+// Demo mode with simulated audio data
+function startDemoMode() {
+  console.log('Starting demo mode with simulated audio');
+  isAudioSupported = false;
+  bufferLength = 512;
+  dataArray = new Uint8Array(bufferLength);
+  animate();
+}
+
+// Function to draw messages on canvas
+function drawMessage(message) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Background
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Message
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '18px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText(message, canvas.width / 2, canvas.height / 2 - 20);
+  ctx.fillText('Click to enable microphone access', canvas.width / 2, canvas.height / 2 + 10);
+}
+
+// Generate simulated audio data for demo mode
+function generateDemoData() {
+  const time = Date.now() * 0.001;
+  for (let i = 0; i < bufferLength; i++) {
+    const frequency = i * 0.1;
+    const amplitude = Math.sin(time * 2 + frequency) * 0.5 + 0.5;
+    dataArray[i] = Math.floor(amplitude * 255);
+  }
+}
+
+// Animation loop
+function animate() {
+  requestAnimationFrame(animate);
+
+  if (!isAudioSupported) {
+    generateDemoData();
+  } else if (analyser) {
+    analyser.getByteFrequencyData(dataArray);
+  }
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  const radius = Math.min(canvas.width, canvas.height) * 0.35;
+
+  // Draw base circle
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  ctx.strokeStyle = '#3B82F6';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Draw frequency bars
+  const barWidth = (Math.PI * 2) / bufferLength;
+  
+  for (let i = 0; i < bufferLength; i++) {
+    const barHeight = dataArray[i] * 0.6;
+    
+    const angle = i * barWidth;
+    const innerX = centerX + Math.cos(angle) * radius;
+    const innerY = centerY + Math.sin(angle) * radius;
+    const outerX = centerX + Math.cos(angle) * (radius + barHeight);
+    const outerY = centerY + Math.sin(angle) * (radius + barHeight);
+
+    // Color based on frequency
+    const hue = (i / bufferLength) * 360;
+    ctx.strokeStyle = \`hsl(\${hue}, 100%, 60%)\`;
+    ctx.lineWidth = 2;
+    
+    ctx.beginPath();
+    ctx.moveTo(innerX, innerY);
+    ctx.lineTo(outerX, outerY);
+    ctx.stroke();
+
+    // Add glow effect
+    ctx.shadowColor = \`hsl(\${hue}, 100%, 60%)\`;
+    ctx.shadowBlur = 5;
+    ctx.beginPath();
+    ctx.arc(outerX, outerY, 2, 0, Math.PI * 2);
+    ctx.fillStyle = \`hsl(\${hue}, 100%, 70%)\`;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // Draw central pulse
+  const averageVolume = dataArray.reduce((sum, val) => sum + val, 0) / bufferLength;
+  const pulseRadius = radius * 0.15 + averageVolume * 0.1;
+  
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, pulseRadius, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(59, 130, 246, 0.3)';
+  ctx.fill();
+  
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, pulseRadius * 0.5, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(59, 130, 246, 0.6)';
+  ctx.fill();
+
+  // Instructions
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+  ctx.font = '14px Arial';
+  ctx.textAlign = 'center';
+  
+  if (isAudioSupported) {
+    ctx.fillText('Real-time Audio Visualization', canvas.width / 2, 30);
+    ctx.fillText('Speak or make sounds to see the visualization!', canvas.width / 2, 50);
+  } else {
+    ctx.fillText('Demo Mode - Simulated Audio Visualization', canvas.width / 2, 30);
+    ctx.fillText('Click to enable real microphone input', canvas.width / 2, 50);
+  }
+}
+
+// Start initialization
+initAudio();`
   }
 ];
