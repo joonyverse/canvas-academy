@@ -36,7 +36,7 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
     maxExecutionTime: 10000 // 10 seconds
   });
 
-  // Update canvas size based on container
+  // Update canvas size based on container (stable reference)
   const updateCanvasSize = React.useCallback(() => {
     if (!containerRef.current) return;
     
@@ -47,28 +47,34 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
     const newWidth = Math.max(400, Math.floor(containerRect.width - padding));
     const newHeight = Math.max(300, Math.floor(containerRect.height - padding - bottomSpace));
     
-    // Only update if size actually changed to prevent unnecessary re-renders
+    // Only update state if size actually changed
     setCanvasSize(prev => {
       if (prev.width !== newWidth || prev.height !== newHeight) {
-        resizeCanvas(newWidth, newHeight);
+        // Don't call resizeCanvas here to avoid triggering more events
         return { width: newWidth, height: newHeight };
       }
       return prev;
     });
-  }, [resizeCanvas]);
+  }, []); // Remove resizeCanvas dependency to stabilize
 
-  // Set up resize observer
+  // Set up resize observer with debouncing
   useEffect(() => {
     if (!containerRef.current) return;
     
+    let resizeTimeout: NodeJS.Timeout;
     const resizeObserver = new ResizeObserver(() => {
-      updateCanvasSize();
+      // Debounce resize events to prevent continuous triggering
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        updateCanvasSize();
+      }, 100); // Wait 100ms after resize stops
     });
     
     resizeObserver.observe(containerRef.current);
     updateCanvasSize(); // Initial size
     
     return () => {
+      clearTimeout(resizeTimeout);
       resizeObserver.disconnect();
     };
   }, [updateCanvasSize]);
@@ -113,15 +119,17 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
     }
   }, [initializeCanvas]);
 
-  // Update canvas size when it changes (but don't re-execute code)
+  // Update canvas size when it changes (preserve animations)
   useEffect(() => {
     if (canvasRef.current && isReady) {
-      canvasRef.current.width = canvasSize.width;
-      canvasRef.current.height = canvasSize.height;
-      // Only clear canvas, don't re-execute code automatically
-      const ctx = canvasRef.current.getContext('2d');
-      if (ctx) {
-        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      const prevWidth = canvasRef.current.width;
+      const prevHeight = canvasRef.current.height;
+      
+      // Only update if size actually changed
+      if (prevWidth !== canvasSize.width || prevHeight !== canvasSize.height) {
+        canvasRef.current.width = canvasSize.width;
+        canvasRef.current.height = canvasSize.height;
+        // Don't clear canvas - let animation continue
       }
     }
   }, [canvasSize, isReady]);
