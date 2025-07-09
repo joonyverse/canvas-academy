@@ -1,5 +1,5 @@
 import React from 'react';
-import { Code, BookOpen, GitHub } from 'lucide-react';
+import { Code, BookOpen, Github } from 'lucide-react';
 import ShareButton from './ShareButton';
 import AuthButton from './AuthButton';
 import { Example } from '../types';
@@ -40,7 +40,7 @@ const Header: React.FC<HeaderProps> = ({ selectedExample, currentCode }) => {
             rel="noopener noreferrer"
             className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
           >
-            <GitHub className="w-4 h-4" />
+            <Github className="w-4 h-4" />
             <span>GitHub</span>
           </a>
           <AuthButton />

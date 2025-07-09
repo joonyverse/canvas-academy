@@ -1,5 +1,5 @@
 import React from 'react'
-import { GitHub, LogOut, User } from 'lucide-react'
+import { Github, LogOut, User } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 const AuthButton: React.FC = () => {
@@ -46,7 +46,7 @@ const AuthButton: React.FC = () => {
       onClick={signInWithGitHub}
       className="flex items-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
     >
-      <GitHub className="w-5 h-5" />
+      <Github className="w-5 h-5" />
       <span>Sign in with GitHub</span>
     </button>
   )
