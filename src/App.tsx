@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import Header from './components/Header';
 import Layout from './components/Layout';
 import ConfirmDialog from './components/ConfirmDialog';
@@ -10,6 +10,7 @@ import { usePanelState } from './hooks/usePanelState';
 import { useExampleState } from './hooks/useExampleState';
 import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider } from './contexts/AuthContext';
+import { ProjectProvider } from './contexts/ProjectContext';
 import { type Project } from './lib/database';
 
 function App() {
@@ -72,64 +73,67 @@ function App() {
     }
   };
 
+
   return (
     <AuthProvider>
-      <ErrorBoundary>
-        <div className="h-screen flex flex-col bg-gray-100">
-          <Header
-            selectedExample={exampleState.selectedExample}
-            currentCode={currentCode}
-            onProjectLoad={handleProjectLoad}
-          />
+      <ProjectProvider>
+        <ErrorBoundary>
+          <div className="h-screen flex flex-col bg-gray-100">
+            <Header
+              selectedExample={exampleState.selectedExample}
+              currentCode={currentCode}
+              onProjectLoad={handleProjectLoad}
+            />
 
-          <Layout
-            panelState={panelState}
-            exampleState={exampleState}
-            project={project}
-            currentCode={currentCode}
-            onFileSelect={selectFile}
-            onFileCreate={(name, type, parentId) => createFile(name, type, parentId)}
-            onFileRename={renameFile}
-            onFileDelete={deleteFile}
-            onFolderToggle={toggleFolder}
-            onCodeChange={handleCodeChange}
-            onProjectLoad={handleProjectLoad}
-          />
+            <Layout
+              panelState={panelState}
+              exampleState={exampleState}
+              project={project}
+              currentCode={currentCode}
+              onFileSelect={selectFile}
+              onFileCreate={(name, type, parentId) => createFile(name, type, parentId)}
+              onFileRename={renameFile}
+              onFileDelete={deleteFile}
+              onFolderToggle={toggleFolder}
+              onCodeChange={handleCodeChange}
+              onProjectLoad={handleProjectLoad}
+            />
 
-          {exampleState.selectedExample && (
-            <div className="bg-white border-t border-gray-200 p-4">
-              <div className="flex items-center space-x-4">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900">{exampleState.selectedExample.title}</h3>
-                  <p className="text-sm text-gray-600">{exampleState.selectedExample.description}</p>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-500">Difficulty:</span>
-                    <span className={`px-2 py-1 text-xs font-medium rounded ${exampleState.selectedExample.difficulty === 'beginner' ? 'bg-green-100 text-green-800' :
-                        exampleState.selectedExample.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
-                      }`}>
-                      {exampleState.selectedExample.difficulty}
-                    </span>
+            {exampleState.selectedExample && (
+              <div className="bg-white border-t border-gray-200 p-4">
+                <div className="flex items-center space-x-4">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900">{exampleState.selectedExample.title}</h3>
+                    <p className="text-sm text-gray-600">{exampleState.selectedExample.description}</p>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-500">Difficulty:</span>
+                      <span className={`px-2 py-1 text-xs font-medium rounded ${exampleState.selectedExample.difficulty === 'beginner' ? 'bg-green-100 text-green-800' :
+                          exampleState.selectedExample.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                        }`}>
+                        {exampleState.selectedExample.difficulty}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <ConfirmDialog
-            isOpen={exampleState.dialogState.isOpen}
-            title={exampleState.dialogState.title}
-            message={exampleState.dialogState.message}
-            confirmText={exampleState.dialogState.confirmText}
-            cancelText={exampleState.dialogState.cancelText}
-            variant={exampleState.dialogState.variant}
-            onConfirm={exampleState.dialogState.onConfirm}
-            onCancel={exampleState.dialogState.onCancel}
-          />
-        </div>
-      </ErrorBoundary>
+            <ConfirmDialog
+              isOpen={exampleState.dialogState.isOpen}
+              title={exampleState.dialogState.title}
+              message={exampleState.dialogState.message}
+              confirmText={exampleState.dialogState.confirmText}
+              cancelText={exampleState.dialogState.cancelText}
+              variant={exampleState.dialogState.variant}
+              onConfirm={exampleState.dialogState.onConfirm}
+              onCancel={exampleState.dialogState.onCancel}
+            />
+          </div>
+        </ErrorBoundary>
+      </ProjectProvider>
     </AuthProvider>
   );
 }

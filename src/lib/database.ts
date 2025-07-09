@@ -5,6 +5,10 @@ export type Project = Database['public']['Tables']['projects']['Row']
 export type ProjectInsert = Database['public']['Tables']['projects']['Insert']
 export type ProjectUpdate = Database['public']['Tables']['projects']['Update']
 
+export type ProjectFile = Database['public']['Tables']['project_files']['Row']
+export type ProjectFileInsert = Database['public']['Tables']['project_files']['Insert']
+export type ProjectFileUpdate = Database['public']['Tables']['project_files']['Update']
+
 export type UserProfile = Database['public']['Tables']['user_profiles']['Row']
 export type UserProgress = Database['public']['Tables']['user_progress']['Row']
 
@@ -122,4 +126,84 @@ export const isExampleComplete = async (exampleId: string) => {
 
   if (error && error.code !== 'PGRST116') throw error
   return !!data
+}
+
+// Project file operations
+export const getProjectFiles = async (projectId: string) => {
+  const { data, error } = await supabase
+    .from('project_files')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('created_at', { ascending: true })
+
+  if (error) throw error
+  return data
+}
+
+export const createProjectFile = async (file: Omit<ProjectFileInsert, 'id' | 'created_at' | 'updated_at'>) => {
+  const { data, error } = await supabase
+    .from('project_files')
+    .insert([file])
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+export const updateProjectFile = async (fileId: string, updates: ProjectFileUpdate) => {
+  const { data, error } = await supabase
+    .from('project_files')
+    .update(updates)
+    .eq('id', fileId)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+export const deleteProjectFile = async (fileId: string) => {
+  const { error } = await supabase
+    .from('project_files')
+    .delete()
+    .eq('id', fileId)
+
+  if (error) throw error
+}
+
+// Enhanced project operations
+export const createProjectWithFiles = async (
+  projectData: Omit<ProjectInsert, 'id' | 'user_id' | 'created_at' | 'updated_at'>,
+  files?: Omit<ProjectFileInsert, 'id' | 'project_id' | 'created_at' | 'updated_at'>[]
+) => {
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) throw new Error('User not authenticated')
+
+  const { data: project, error: projectError } = await supabase
+    .from('projects')
+    .insert([{ ...projectData, user_id: user.id }])
+    .select()
+    .single()
+
+  if (projectError) throw projectError
+
+  // Create default files if none provided
+  if (!files || files.length === 0) {
+    await supabase.rpc('create_default_project_files', { project_id: project.id })
+  } else {
+    const fileInserts = files.map(file => ({
+      ...file,
+      project_id: project.id
+    }))
+    
+    const { error: filesError } = await supabase
+      .from('project_files')
+      .insert(fileInserts)
+
+    if (filesError) throw filesError
+  }
+
+  return project
 }

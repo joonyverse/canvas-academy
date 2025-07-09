@@ -41,6 +41,12 @@ export interface Database {
           description: string | null
           code: string
           is_public: boolean
+          tags: string[] | null
+          file_structure: any | null
+          active_file_id: string | null
+          project_type: string | null
+          visibility: string | null
+          thumbnail_url: string | null
           created_at: string
           updated_at: string
         }
@@ -51,6 +57,12 @@ export interface Database {
           description?: string | null
           code: string
           is_public?: boolean
+          tags?: string[] | null
+          file_structure?: any | null
+          active_file_id?: string | null
+          project_type?: string | null
+          visibility?: string | null
+          thumbnail_url?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -61,6 +73,47 @@ export interface Database {
           description?: string | null
           code?: string
           is_public?: boolean
+          tags?: string[] | null
+          file_structure?: any | null
+          active_file_id?: string | null
+          project_type?: string | null
+          visibility?: string | null
+          thumbnail_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      project_files: {
+        Row: {
+          id: string
+          project_id: string
+          name: string
+          type: string
+          content: string
+          parent_id: string | null
+          is_open: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          name: string
+          type: string
+          content?: string
+          parent_id?: string | null
+          is_open?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          name?: string
+          type?: string
+          content?: string
+          parent_id?: string | null
+          is_open?: boolean
           created_at?: string
           updated_at?: string
         }

@@ -7,7 +7,6 @@ import VscodeProjects from './VscodeProjects';
 import CodeEditor from './CodeEditor';
 import CanvasPreview from './CanvasPreview';
 import { PANEL_SIZES } from '../constants/panelConstants';
-import { Example } from '../types';
 import { Project } from '../hooks/useProject';
 import { type Project as DatabaseProject } from '../lib/database';
 import type { UsePanelStateReturn } from '../types/panel';
@@ -20,7 +19,7 @@ interface LayoutProps {
   // Example state
   exampleState: UseExampleStateReturn;
   
-  // Project state
+  // Project state (legacy - for examples)
   project: Project;
   currentCode: string;
   onFileSelect: (fileId: string) => void;
@@ -35,13 +34,13 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({
   panelState,
   exampleState,
-  project,
+  project: _project,
   currentCode,
-  onFileSelect,
-  onFileCreate,
-  onFileRename,
-  onFileDelete,
-  onFolderToggle,
+  onFileSelect: _onFileSelect,
+  onFileCreate: _onFileCreate,
+  onFileRename: _onFileRename,
+  onFileDelete: _onFileDelete,
+  onFolderToggle: _onFolderToggle,
   onCodeChange,
   onProjectLoad,
 }) => {
@@ -109,12 +108,7 @@ const Layout: React.FC<LayoutProps> = ({
             >
               <div className={`h-full ${activePanel === null ? 'opacity-0' : 'opacity-100'}`}>
                 <VscodeExplorer
-                  project={project}
-                  onFileSelect={onFileSelect}
-                  onFileCreate={onFileCreate}
-                  onFileRename={onFileRename}
-                  onFileDelete={onFileDelete}
-                  onFolderToggle={onFolderToggle}
+                  onCodeChange={onCodeChange}
                 />
               </div>
             </Panel>
