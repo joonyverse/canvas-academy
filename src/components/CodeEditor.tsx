@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
-import { Play, RotateCcw, Copy, Check, Settings, Download, Upload, Maximize2, Minimize2 } from 'lucide-react';
+import { Play, RotateCcw, Copy, Check, Settings, Download, Upload, Maximize2, Minimize2, AlertTriangle } from 'lucide-react';
+import { validateAndSanitizeFile } from '../utils/fileValidation';
 
 interface CodeEditorProps {
   code: string;
@@ -13,6 +14,8 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
   const [copied, setCopied] = React.useState(false);
   const [isFullscreen, setIsFullscreen] = React.useState(false);
   const [showSettings, setShowSettings] = React.useState(false);
+  const [uploadError, setUploadError] = React.useState<string | null>(null);
+  const [isUploading, setIsUploading] = React.useState(false);
   const [editorSettings, setEditorSettings] = React.useState({
     fontSize: 14,
     wordWrap: 'on' as 'on' | 'off',
@@ -49,15 +52,41 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
     fileInputRef.current?.click();
   };
 
-  const handleFileRead = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileRead = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const content = e.target?.result as string;
-        onChange(content);
-      };
-      reader.readAsText(file);
+    if (!file) return;
+    
+    setIsUploading(true);
+    setUploadError(null);
+    
+    try {
+      const validation = await validateAndSanitizeFile(file, {
+        maxSize: 100 * 1024, // 100KB
+        allowedExtensions: ['.js', '.txt'],
+        maxLines: 2000
+      });
+      
+      if (!validation.isValid) {
+        setUploadError(validation.error || 'File validation failed');
+        return;
+      }
+      
+      if (validation.sanitizedContent) {
+        onChange(validation.sanitizedContent);
+        
+        // Show success message briefly
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+      
+    } catch (error) {
+      setUploadError(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsUploading(false);
+      // Reset input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -168,10 +197,12 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
 
           <button
             onClick={handleUpload}
-            className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-            title="Upload File"
+            disabled={isUploading}
+            className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-300 hover:bg-gray-50 disabled:bg-gray-200 disabled:cursor-not-allowed transition-colors"
+            title="Upload File (.js, .txt - max 100KB)"
           >
             <Upload className="w-4 h-4" />
+            {isUploading && <span className="animate-spin">⏳</span>}
           </button>
 
           <button
@@ -217,6 +248,22 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
           </button>
         </div>
       </div>
+
+      {uploadError && (
+        <div className="p-4 bg-red-50 border-b border-red-200 flex items-center space-x-3">
+          <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-red-800">File Upload Error</p>
+            <p className="text-sm text-red-600">{uploadError}</p>
+          </div>
+          <button
+            onClick={() => setUploadError(null)}
+            className="text-red-600 hover:text-red-800 text-lg font-bold"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {showSettings && (
         <div className="p-4 bg-gray-50 border-b border-gray-200">
@@ -378,7 +425,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
         />
         
         {/* Keyboard shortcuts help */}
-        <div className="absolute bottom-2 right-2 text-xs text-gray-500 bg-white bg-opacity-90 px-2 py-1 rounded">
+        <div className="absolute bottom-2 right-2 text-xs text-gray-500 bg-white bg-opacity-90 px-2 py-1 rounded shadow-sm">
           <div>Ctrl+Enter: Run • Ctrl+R: Reset • Shift+Alt+F: Format</div>
         </div>
       </div>
@@ -389,6 +436,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
         accept=".js,.txt"
         onChange={handleFileRead}
         className="hidden"
+        disabled={isUploading}
       />
     </div>
   );

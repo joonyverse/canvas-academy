@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { FileItem, Project } from '../types';
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -105,41 +105,56 @@ animate();`
 
 export const useProject = () => {
   const [project, setProject] = useState<Project>(defaultProject);
+  
+  // Memoized file lookup map for O(1) access
+  const fileMap = useMemo(() => {
+    const map = new Map<string, FileItem>();
+    
+    const addToMap = (files: FileItem[]) => {
+      files.forEach(file => {
+        map.set(file.id, file);
+        if (file.children) {
+          addToMap(file.children);
+        }
+      });
+    };
+    
+    addToMap(project.files);
+    return map;
+  }, [project.files]);
 
   const findFileById = useCallback((files: FileItem[], id: string): FileItem | null => {
-    for (const file of files) {
-      if (file.id === id) return file;
-      if (file.children) {
-        const found = findFileById(file.children, id);
-        if (found) return found;
-      }
-    }
-    return null;
-  }, []);
+    return fileMap.get(id) || null;
+  }, [fileMap]);
 
   const updateFileInTree = useCallback((files: FileItem[], id: string, updates: Partial<FileItem>): FileItem[] => {
-    return files.map(file => {
+    const updateFile = (file: FileItem): FileItem => {
       if (file.id === id) {
         return { ...file, ...updates };
       }
       if (file.children) {
         return {
           ...file,
-          children: updateFileInTree(file.children, id, updates)
+          children: file.children.map(updateFile)
         };
       }
       return file;
-    });
+    };
+    
+    return files.map(updateFile);
   }, []);
 
   const removeFileFromTree = useCallback((files: FileItem[], id: string): FileItem[] => {
-    return files.filter(file => {
-      if (file.id === id) return false;
+    const removeFile = (file: FileItem): FileItem | null => {
+      if (file.id === id) return null;
       if (file.children) {
-        file.children = removeFileFromTree(file.children, id);
+        const filteredChildren = file.children.map(removeFile).filter(Boolean) as FileItem[];
+        return { ...file, children: filteredChildren };
       }
-      return true;
-    });
+      return file;
+    };
+    
+    return files.map(removeFile).filter(Boolean) as FileItem[];
   }, []);
 
   const addFileToTree = useCallback((files: FileItem[], newFile: FileItem, parentId?: string): FileItem[] => {
@@ -147,7 +162,7 @@ export const useProject = () => {
       return [...files, newFile];
     }
 
-    return files.map(file => {
+    const addFile = (file: FileItem): FileItem => {
       if (file.id === parentId && file.type === 'folder') {
         return {
           ...file,
@@ -157,11 +172,13 @@ export const useProject = () => {
       if (file.children) {
         return {
           ...file,
-          children: addFileToTree(file.children, newFile, parentId)
+          children: file.children.map(addFile)
         };
       }
       return file;
-    });
+    };
+    
+    return files.map(addFile);
   }, []);
 
   const selectFile = useCallback((fileId: string) => {
@@ -198,9 +215,25 @@ export const useProject = () => {
 
   const deleteFile = useCallback((fileId: string) => {
     setProject(prev => {
-      const newActiveFileId = prev.activeFileId === fileId ? 
-        (prev.files.find(f => f.id !== fileId)?.id || null) : 
-        prev.activeFileId;
+      // Find a new active file if the deleted file was active
+      let newActiveFileId = prev.activeFileId;
+      if (prev.activeFileId === fileId) {
+        // Find first available file that's not being deleted
+        const findFirstFile = (files: FileItem[]): string | null => {
+          for (const file of files) {
+            if (file.id !== fileId && file.type === 'file') {
+              return file.id;
+            }
+            if (file.children) {
+              const found = findFirstFile(file.children);
+              if (found) return found;
+            }
+          }
+          return null;
+        };
+        
+        newActiveFileId = findFirstFile(prev.files);
+      }
 
       return {
         ...prev,
@@ -220,16 +253,44 @@ export const useProject = () => {
   }, [updateFileInTree, findFileById]);
 
   const updateFileContent = useCallback((fileId: string, content: string) => {
+    // Validate content length to prevent memory issues
+    const validatedContent = content.length > 100000 ? 
+      content.substring(0, 100000) + '\n// ... (content truncated for performance)' : 
+      content;
+    
     setProject(prev => ({
       ...prev,
-      files: updateFileInTree(prev.files, fileId, { content })
+      files: updateFileInTree(prev.files, fileId, { content: validatedContent })
     }));
   }, [updateFileInTree]);
 
   const getActiveFile = useCallback(() => {
     if (!project.activeFileId) return null;
     return findFileById(project.files, project.activeFileId);
-  }, [project.activeFileId, project.files, findFileById]);
+  }, [project.activeFileId, findFileById]);
+
+  // Memoized project statistics for debugging
+  const projectStats = useMemo(() => {
+    const countFiles = (files: FileItem[]): { files: number; folders: number; totalSize: number } => {
+      return files.reduce((acc, file) => {
+        if (file.type === 'file') {
+          acc.files++;
+          acc.totalSize += file.content?.length || 0;
+        } else {
+          acc.folders++;
+          if (file.children) {
+            const childStats = countFiles(file.children);
+            acc.files += childStats.files;
+            acc.folders += childStats.folders;
+            acc.totalSize += childStats.totalSize;
+          }
+        }
+        return acc;
+      }, { files: 0, folders: 0, totalSize: 0 });
+    };
+    
+    return countFiles(project.files);
+  }, [project.files]);
 
   return {
     project,
@@ -239,6 +300,7 @@ export const useProject = () => {
     deleteFile,
     toggleFolder,
     updateFileContent,
-    getActiveFile
+    getActiveFile,
+    projectStats
   };
 };
