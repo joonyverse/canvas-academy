@@ -12,8 +12,6 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = React.useState<string | null>(null);
-  const [isAnimating, setIsAnimating] = React.useState(false);
-  const [isPaused, setIsPaused] = React.useState(false);
   const [canvasSize, setCanvasSize] = React.useState({ width: 400, height: 300 });
   const [showConsole, setShowConsole] = React.useState(false);
   
@@ -21,17 +19,18 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
     initializeCanvas,
     executeCode,
     stopExecution,
-    resizeCanvas,
     isReady,
     isExecuting,
     logs
   } = useSecureCanvasExecutor({
     onError: (errorMessage) => {
       setError(errorMessage);
-      setIsAnimating(false);
     },
     onConsole: (level, args) => {
-      console[level as keyof Console]?.(...args);
+      const consoleMethod = console[level as keyof Console] as Function;
+      if (consoleMethod) {
+        consoleMethod.apply(console, args);
+      }
     },
     maxExecutionTime: 10000 // 10 seconds
   });
@@ -61,7 +60,7 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
   useEffect(() => {
     if (!containerRef.current) return;
     
-    let resizeTimeout: NodeJS.Timeout;
+    let resizeTimeout: number;
     const resizeObserver = new ResizeObserver(() => {
       // Debounce resize events to prevent continuous triggering
       clearTimeout(resizeTimeout);
@@ -81,33 +80,27 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
 
   const stopAnimation = () => {
     stopExecution();
-    setIsAnimating(false);
-    setIsPaused(false);
   };
 
   const executeUserCode = React.useCallback(async () => {
     if (!canvasRef.current || !isReady) return;
 
     setError(null);
-    setIsAnimating(true);
 
     try {
       const result = await executeCode(code);
       
       if (!result.success && result.error) {
         setError(result.error);
-        setIsAnimating(false);
       }
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
-      setIsAnimating(false);
     }
   }, [code, executeCode, isReady]);
 
   useEffect(() => {
     if (isRunning) {
-      setIsPaused(false);
       executeUserCode();
     }
   }, [isRunning]); // Remove executeUserCode from dependency array to prevent re-execution
@@ -141,26 +134,7 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
     };
   }, []);
 
-  const handlePause = () => {
-    setIsPaused(true);
-    stopExecution();
-    setIsAnimating(false);
-  };
-
-  const handleStop = () => {
-    setIsPaused(false);
-    stopAnimation();
-    // Clear canvas
-    if (canvasRef.current) {
-      const ctx = canvasRef.current.getContext('2d');
-      if (ctx) {
-        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-      }
-    }
-  };
-
-  const handleRunResume = () => {
-    setIsPaused(false);
+  const handleRun = () => {
     onRun();
   };
 
@@ -169,22 +143,10 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
       <div className="flex items-center justify-between p-4 bg-gray-100 border-b border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900">Canvas Preview</h3>
         <div className="flex items-center space-x-2">
-          {!isReady && (
-            <span className="flex items-center space-x-2 text-sm text-gray-500">
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
-              <span>Initializing...</span>
-            </span>
-          )}
-          {(isAnimating || isExecuting) && !isPaused && (
+          {isExecuting && (
             <span className="flex items-center space-x-2 text-sm text-green-600">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               <span>Running</span>
-            </span>
-          )}
-          {isPaused && (
-            <span className="flex items-center space-x-2 text-sm text-yellow-600">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-              <span>Paused</span>
             </span>
           )}
           
@@ -199,34 +161,13 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
             </button>
           )}
           
-          {(isAnimating || isExecuting) && !isPaused && (
-            <button
-              onClick={handlePause}
-              className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-white bg-yellow-600 rounded-lg hover:bg-yellow-700 transition-colors"
-            >
-              <span>⏸</span>
-              <span>Pause</span>
-            </button>
-          )}
-          
-          {(isAnimating || isPaused || isExecuting) && (
-            <button
-              onClick={handleStop}
-              className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
-            >
-              <span>⏹</span>
-              <span>Stop</span>
-            </button>
-          )}
-          
           <button
-            onClick={handleRunResume}
-            disabled={!isReady}
-            className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors"
+            onClick={handleRun}
+            className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
             title="Run Code (Ctrl+Enter)"
           >
             <RotateCcw className="w-4 h-4" />
-            <span>{isPaused ? 'Resume' : 'Run'}</span>
+            <span>Run Code</span>
           </button>
         </div>
       </div>
