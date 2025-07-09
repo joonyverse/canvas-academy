@@ -17,14 +17,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 // Auth helper functions
 export const signInWithGitHub = () => {
-  const redirectTo = window.location.hostname === 'localhost' 
-    ? 'http://localhost:5173' 
-    : 'https://inquisitive-medovik-e644b7.netlify.app'
-    
   return supabase.auth.signInWithOAuth({
     provider: 'github',
     options: {
-      redirectTo
+      redirectTo: `${window.location.origin}`
     }
   })
 }
