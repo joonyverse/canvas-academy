@@ -31,6 +31,10 @@ CREATE TABLE user_progress (
   UNIQUE(user_id, example_id)
 );
 
+-- Create indexes for foreign keys
+CREATE INDEX idx_projects_user_id ON projects(user_id);
+CREATE INDEX idx_user_progress_user_id ON user_progress(user_id);
+
 -- Enable RLS on all tables
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
@@ -38,44 +42,45 @@ ALTER TABLE user_progress ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies for user_profiles
 CREATE POLICY "Users can view their own profile" ON user_profiles
-  FOR SELECT USING (auth.uid() = id);
+  FOR SELECT USING ((auth.uid()) = id);
 
 CREATE POLICY "Users can update their own profile" ON user_profiles
-  FOR UPDATE USING (auth.uid() = id);
+  FOR UPDATE USING ((auth.uid()) = id);
 
 CREATE POLICY "Users can insert their own profile" ON user_profiles
-  FOR INSERT WITH CHECK (auth.uid() = id);
+  FOR INSERT WITH CHECK ((auth.uid()) = id);
 
 -- Create RLS policies for projects
 CREATE POLICY "Users can view their own projects" ON projects
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING ((auth.uid()) = user_id);
 
 CREATE POLICY "Users can view public projects" ON projects
   FOR SELECT USING (is_public = TRUE);
 
 CREATE POLICY "Users can insert their own projects" ON projects
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK ((auth.uid()) = user_id);
 
 CREATE POLICY "Users can update their own projects" ON projects
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING ((auth.uid()) = user_id);
 
 CREATE POLICY "Users can delete their own projects" ON projects
-  FOR DELETE USING (auth.uid() = user_id);
+  FOR DELETE USING ((auth.uid()) = user_id);
 
 -- Create RLS policies for user_progress
 CREATE POLICY "Users can view their own progress" ON user_progress
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING ((auth.uid()) = user_id);
 
 CREATE POLICY "Users can insert their own progress" ON user_progress
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK ((auth.uid()) = user_id);
 
 CREATE POLICY "Users can update their own progress" ON user_progress
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING ((auth.uid()) = user_id);
 
 -- Create function to automatically create user profile
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
+  SET search_path = '';
   INSERT INTO public.user_profiles (id, email, display_name, avatar_url, github_username)
   VALUES (
     NEW.id,
@@ -97,10 +102,11 @@ CREATE TRIGGER on_auth_user_created
 CREATE OR REPLACE FUNCTION public.handle_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
+  SET search_path = '';
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY INVOKER;
 
 -- Create updated_at triggers
 CREATE TRIGGER handle_updated_at_user_profiles
