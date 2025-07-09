@@ -526,5 +526,847 @@ function gameLoop() {
 }
 
 gameLoop();`
+  },
+  {
+    id: 'text-wave-animation',
+    title: 'Text Wave Animation',
+    description: 'Animated text with wave distortion effect',
+    category: 'effects',
+    difficulty: 'advanced',
+    code: `// Canvas and context are already available as 'canvas' and 'ctx'
+
+let time = 0;
+const text = 'WAVE EFFECT';
+const fontSize = 48;
+const baseY = canvas.height / 2;
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Set background
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Configure text
+  ctx.font = \`bold \${fontSize}px Arial\`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  
+  // Calculate text width for centering
+  const textWidth = ctx.measureText(text).width;
+  const startX = (canvas.width - textWidth) / 2;
+  
+  // Draw each character with wave effect
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const charWidth = ctx.measureText(char).width;
+    const x = startX + i * (textWidth / text.length);
+    
+    // Wave calculation
+    const waveOffset = Math.sin(time + i * 0.3) * 30;
+    const y = baseY + waveOffset;
+    
+    // Color based on wave position
+    const hue = (time * 50 + i * 30) % 360;
+    ctx.fillStyle = \`hsl(\${hue}, 70%, 60%)\`;
+    
+    // Add glow effect
+    ctx.shadowColor = ctx.fillStyle;
+    ctx.shadowBlur = 15;
+    
+    ctx.fillText(char, x, y);
+  }
+  
+  // Reset shadow
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  
+  time += 0.05;
+  requestAnimationFrame(animate);
+}
+
+animate();`
+  },
+  {
+    id: 'morphing-text',
+    title: 'Morphing Text',
+    description: 'Text that morphs between different words',
+    category: 'effects',
+    difficulty: 'advanced',
+    code: `// Canvas and context are already available as 'canvas' and 'ctx'
+
+const words = ['CANVAS', 'CREATIVE', 'CODING', 'COOL'];
+let currentWord = 0;
+let nextWord = 1;
+let morphProgress = 0;
+let morphSpeed = 0.02;
+
+function getTextPoints(text, fontSize) {
+  // Create a temporary canvas using the main canvas context
+  const tempWidth = 400;
+  const tempHeight = 100;
+  
+  // Save current canvas state
+  ctx.save();
+  
+  // Clear a temporary area
+  ctx.clearRect(0, 0, tempWidth, tempHeight);
+  ctx.fillStyle = 'white';
+  ctx.font = \`bold \${fontSize}px Arial\`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, tempWidth / 2, tempHeight / 2);
+  
+  // Get image data from the temporary area
+  const imageData = ctx.getImageData(0, 0, tempWidth, tempHeight);
+  const points = [];
+  
+  for (let y = 0; y < tempHeight; y += 2) {
+    for (let x = 0; x < tempWidth; x += 2) {
+      const index = (y * tempWidth + x) * 4;
+      if (imageData.data[index + 3] > 128) {
+        points.push({ x: x - tempWidth / 2, y: y - tempHeight / 2 });
+      }
+    }
+  }
+  
+  // Restore canvas state
+  ctx.restore();
+  
+  return points;
+}
+
+let currentPoints = getTextPoints(words[currentWord], 60);
+let nextPoints = getTextPoints(words[nextWord], 60);
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Dark background
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  
+  // Interpolate between current and next points
+  const maxPoints = Math.max(currentPoints.length, nextPoints.length);
+  
+  for (let i = 0; i < maxPoints; i++) {
+    const currentPoint = currentPoints[i] || currentPoints[currentPoints.length - 1];
+    const nextPoint = nextPoints[i] || nextPoints[nextPoints.length - 1];
+    
+    if (currentPoint && nextPoint) {
+      const x = centerX + currentPoint.x + (nextPoint.x - currentPoint.x) * morphProgress;
+      const y = centerY + currentPoint.y + (nextPoint.y - currentPoint.y) * morphProgress;
+      
+      // Color based on morph progress
+      const hue = morphProgress * 360;
+      ctx.fillStyle = \`hsl(\${hue}, 70%, 60%)\`;
+      
+      ctx.beginPath();
+      ctx.arc(x, y, 1.5, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+  }
+  
+  // Update morph progress
+  morphProgress += morphSpeed;
+  
+  if (morphProgress >= 1) {
+    morphProgress = 0;
+    currentWord = nextWord;
+    nextWord = (nextWord + 1) % words.length;
+    currentPoints = getTextPoints(words[currentWord], 60);
+    nextPoints = getTextPoints(words[nextWord], 60);
+  }
+  
+  requestAnimationFrame(animate);
+}
+
+animate();`
+  },
+  {
+    id: 'particle-text',
+    title: 'Particle Text',
+    description: 'Text made of animated particles',
+    category: 'effects',
+    difficulty: 'advanced',
+    code: `// Canvas and context are already available as 'canvas' and 'ctx'
+
+const text = 'PARTICLES';
+let particles = [];
+
+class TextParticle {
+  constructor(x, y, targetX, targetY) {
+    this.x = x;
+    this.y = y;
+    this.targetX = targetX;
+    this.targetY = targetY;
+    this.vx = 0;
+    this.vy = 0;
+    this.size = Math.random() * 2 + 1;
+    this.color = \`hsl(\${Math.random() * 360}, 70%, 60%)\`;
+    this.life = 1;
+  }
+  
+  update() {
+    const dx = this.targetX - this.x;
+    const dy = this.targetY - this.y;
+    
+    this.vx += dx * 0.02;
+    this.vy += dy * 0.02;
+    
+    this.vx *= 0.85;
+    this.vy *= 0.85;
+    
+    this.x += this.vx;
+    this.y += this.vy;
+    
+    // Add some noise
+    this.x += (Math.random() - 0.5) * 0.5;
+    this.y += (Math.random() - 0.5) * 0.5;
+  }
+  
+  draw() {
+    ctx.save();
+    ctx.globalAlpha = this.life;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function createTextParticles() {
+  // Save current canvas state
+  ctx.save();
+  
+  // Clear and prepare canvas for text rendering
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 80px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+  
+  // Get image data from the full canvas
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  particles = [];
+  
+  for (let y = 0; y < canvas.height; y += 3) {
+    for (let x = 0; x < canvas.width; x += 3) {
+      const index = (y * canvas.width + x) * 4;
+      if (imageData.data[index + 3] > 128) {
+        const particle = new TextParticle(
+          Math.random() * canvas.width,
+          Math.random() * canvas.height,
+          x,
+          y
+        );
+        particles.push(particle);
+      }
+    }
+  }
+  
+  // Restore canvas state
+  ctx.restore();
+}
+
+let mouseX = canvas.width / 2;
+let mouseY = canvas.height / 2;
+
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  mouseX = e.clientX - rect.left;
+  mouseY = e.clientY - rect.top;
+});
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Dark background
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Update and draw particles
+  particles.forEach(particle => {
+    // Mouse interaction
+    const dx = mouseX - particle.x;
+    const dy = mouseY - particle.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    if (distance < 100) {
+      const force = (100 - distance) / 100;
+      particle.x -= dx * force * 0.1;
+      particle.y -= dy * force * 0.1;
+    }
+    
+    particle.update();
+    particle.draw();
+  });
+  
+  // Instructions
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+  ctx.font = '14px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('Move mouse to interact with particles', canvas.width / 2, 30);
+  
+  requestAnimationFrame(animate);
+}
+
+createTextParticles();
+animate();`
+  },
+  {
+    id: 'liquid-effect',
+    title: 'Liquid Blob Effect',
+    description: 'Organic liquid-like blob animations',
+    category: 'effects',
+    difficulty: 'advanced',
+    code: `// Canvas and context are already available as 'canvas' and 'ctx'
+
+let blobs = [];
+let time = 0;
+
+class Blob {
+  constructor(x, y, radius, color) {
+    this.x = x;
+    this.y = y;
+    this.radius = radius;
+    this.baseRadius = radius;
+    this.color = color;
+    this.vx = (Math.random() - 0.5) * 2;
+    this.vy = (Math.random() - 0.5) * 2;
+    this.phase = Math.random() * Math.PI * 2;
+  }
+  
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    
+    // Bounce off walls
+    if (this.x < this.radius || this.x > canvas.width - this.radius) {
+      this.vx *= -1;
+    }
+    if (this.y < this.radius || this.y > canvas.height - this.radius) {
+      this.vy *= -1;
+    }
+    
+    // Pulsing effect
+    this.radius = this.baseRadius + Math.sin(time + this.phase) * 10;
+  }
+  
+  draw() {
+    ctx.save();
+    
+    // Create radial gradient for glow effect
+    const gradient = ctx.createRadialGradient(
+      this.x, this.y, 0,
+      this.x, this.y, this.radius * 2
+    );
+    gradient.addColorStop(0, this.color);
+    gradient.addColorStop(0.7, this.color.replace('0.8', '0.4'));
+    gradient.addColorStop(1, this.color.replace('0.8', '0'));
+    
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius * 2, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    ctx.restore();
+  }
+}
+
+// Create blobs
+for (let i = 0; i < 8; i++) {
+  const hue = (i * 45) % 360;
+  const color = \`hsla(\${hue}, 70%, 60%, 0.8)\`;
+  blobs.push(new Blob(
+    Math.random() * canvas.width,
+    Math.random() * canvas.height,
+    Math.random() * 30 + 20,
+    color
+  ));
+}
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Dark background
+  ctx.fillStyle = '#0f0f0f';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Enable blending for liquid effect
+  ctx.globalCompositeOperation = 'screen';
+  
+  // Update and draw blobs
+  blobs.forEach(blob => {
+    blob.update();
+    blob.draw();
+  });
+  
+  // Reset blending
+  ctx.globalCompositeOperation = 'source-over';
+  
+  time += 0.02;
+  requestAnimationFrame(animate);
+}
+
+animate();`
+  },
+  {
+    id: 'spiral-galaxy',
+    title: 'Spiral Galaxy',
+    description: 'Animated spiral galaxy with particles',
+    category: 'effects',
+    difficulty: 'advanced',
+    code: `// Canvas and context are already available as 'canvas' and 'ctx'
+
+let stars = [];
+let time = 0;
+
+class Star {
+  constructor(angle, distance) {
+    this.angle = angle;
+    this.distance = distance;
+    this.baseDistance = distance;
+    this.size = Math.random() * 2 + 0.5;
+    this.speed = 0.01 + Math.random() * 0.02;
+    this.color = \`hsl(\${200 + Math.random() * 60}, 70%, \${50 + Math.random() * 30}%)\`;
+    this.brightness = Math.random();
+  }
+  
+  update() {
+    this.angle += this.speed;
+    this.distance = this.baseDistance + Math.sin(time + this.angle) * 5;
+    
+    // Spiral effect
+    const spiralFactor = this.distance / 200;
+    this.angle += spiralFactor * 0.01;
+    
+    // Twinkling effect
+    this.brightness = 0.5 + Math.sin(time * 3 + this.angle * 10) * 0.5;
+  }
+  
+  draw() {
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    
+    const x = centerX + Math.cos(this.angle) * this.distance;
+    const y = centerY + Math.sin(this.angle) * this.distance;
+    
+    ctx.save();
+    ctx.globalAlpha = this.brightness;
+    
+    // Glow effect
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = this.size * 3;
+    
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(x, y, this.size, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    ctx.restore();
+  }
+}
+
+// Create galaxy arms
+for (let arm = 0; arm < 3; arm++) {
+  const armAngle = (arm * Math.PI * 2) / 3;
+  
+  for (let i = 0; i < 150; i++) {
+    const angle = armAngle + (i * 0.1);
+    const distance = 20 + i * 2;
+    
+    // Add some randomness to arm position
+    const randomAngle = angle + (Math.random() - 0.5) * 0.3;
+    const randomDistance = distance + (Math.random() - 0.5) * 30;
+    
+    stars.push(new Star(randomAngle, randomDistance));
+  }
+}
+
+// Add central cluster
+for (let i = 0; i < 50; i++) {
+  const angle = Math.random() * Math.PI * 2;
+  const distance = Math.random() * 50;
+  stars.push(new Star(angle, distance));
+}
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Space background
+  ctx.fillStyle = '#000011';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Draw central glow
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  const gradient = ctx.createRadialGradient(
+    centerX, centerY, 0,
+    centerX, centerY, 100
+  );
+  gradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
+  gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 100, 0, 2 * Math.PI);
+  ctx.fill();
+  
+  // Update and draw stars
+  stars.forEach(star => {
+    star.update();
+    star.draw();
+  });
+  
+  time += 0.01;
+  requestAnimationFrame(animate);
+}
+
+animate();`
+  },
+  {
+    id: 'dna-helix',
+    title: 'DNA Helix Animation',
+    description: 'Rotating DNA double helix structure',
+    category: 'animation',
+    difficulty: 'advanced',
+    code: `// Canvas and context are already available as 'canvas' and 'ctx'
+
+let time = 0;
+const helixHeight = 300;
+const helixRadius = 80;
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+
+function drawDNA() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Dark background
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Draw helix strands
+  for (let strand = 0; strand < 2; strand++) {
+    const strandOffset = strand * Math.PI;
+    
+    ctx.beginPath();
+    ctx.strokeStyle = strand === 0 ? '#ff6b6b' : '#4ecdc4';
+    ctx.lineWidth = 4;
+    
+    for (let i = 0; i <= 100; i++) {
+      const y = centerY - helixHeight / 2 + (i / 100) * helixHeight;
+      const angle = time + (i * 0.2) + strandOffset;
+      const x = centerX + Math.cos(angle) * helixRadius;
+      
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    ctx.stroke();
+  }
+  
+  // Draw connecting base pairs
+  for (let i = 0; i <= 30; i++) {
+    const y = centerY - helixHeight / 2 + (i / 30) * helixHeight;
+    const angle = time + (i * 0.6);
+    
+    const x1 = centerX + Math.cos(angle) * helixRadius;
+    const x2 = centerX + Math.cos(angle + Math.PI) * helixRadius;
+    
+    // Base pair line
+    ctx.beginPath();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.moveTo(x1, y);
+    ctx.lineTo(x2, y);
+    ctx.stroke();
+    
+    // Base pair dots
+    ctx.fillStyle = '#ff6b6b';
+    ctx.beginPath();
+    ctx.arc(x1, y, 4, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    ctx.fillStyle = '#4ecdc4';
+    ctx.beginPath();
+    ctx.arc(x2, y, 4, 0, 2 * Math.PI);
+    ctx.fill();
+  }
+  
+  // Title
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 24px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('DNA Double Helix', centerX, 50);
+}
+
+function animate() {
+  drawDNA();
+  time += 0.05;
+  requestAnimationFrame(animate);
+}
+
+animate();`
+  },
+  {
+    id: 'fractal-tree',
+    title: 'Fractal Tree',
+    description: 'Animated growing fractal tree',
+    category: 'effects',
+    difficulty: 'advanced',
+    code: `// Canvas and context are already available as 'canvas' and 'ctx'
+
+let animationProgress = 0;
+const maxDepth = 10;
+
+function drawBranch(x, y, angle, length, depth, progress) {
+  if (depth > maxDepth || length < 2) return;
+  
+  // Calculate progress for this branch
+  const branchProgress = Math.max(0, Math.min(1, progress - depth * 0.1));
+  if (branchProgress <= 0) return;
+  
+  const endX = x + Math.cos(angle) * length * branchProgress;
+  const endY = y + Math.sin(angle) * length * branchProgress;
+  
+  // Branch color based on depth
+  const hue = 30 + depth * 15;
+  const saturation = 70 - depth * 5;
+  const lightness = 60 - depth * 3;
+  
+  ctx.strokeStyle = \`hsl(\${hue}, \${saturation}%, \${lightness}%)\`;
+  ctx.lineWidth = Math.max(1, maxDepth - depth);
+  
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(endX, endY);
+  ctx.stroke();
+  
+  // Only draw sub-branches if current branch is fully grown
+  if (branchProgress >= 1) {
+    const newLength = length * 0.75;
+    const angleVariation = 0.5 + Math.sin(depth + animationProgress * 0.1) * 0.2;
+    
+    // Left branch
+    drawBranch(
+      endX, endY,
+      angle - angleVariation,
+      newLength,
+      depth + 1,
+      progress
+    );
+    
+    // Right branch
+    drawBranch(
+      endX, endY,
+      angle + angleVariation,
+      newLength,
+      depth + 1,
+      progress
+    );
+  }
+}
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Gradient background
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  gradient.addColorStop(0, '#1a1a2e');
+  gradient.addColorStop(1, '#16213e');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Start drawing from bottom center
+  const startX = canvas.width / 2;
+  const startY = canvas.height - 50;
+  const startAngle = -Math.PI / 2;
+  const trunkLength = 80;
+  
+  // Animate growth
+  animationProgress += 0.01;
+  const growthProgress = Math.min(1, animationProgress);
+  
+  // Draw trunk
+  ctx.strokeStyle = '#8b4513';
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.moveTo(startX, startY);
+  ctx.lineTo(startX, startY - trunkLength * growthProgress);
+  ctx.stroke();
+  
+  // Draw fractal branches
+  if (growthProgress >= 1) {
+    drawBranch(
+      startX,
+      startY - trunkLength,
+      startAngle,
+      60,
+      0,
+      animationProgress - 1
+    );
+  }
+  
+  // Reset animation
+  if (animationProgress > 8) {
+    animationProgress = 0;
+  }
+  
+  requestAnimationFrame(animate);
+}
+
+animate();`
+  },
+  {
+    id: 'physics-pendulum',
+    title: 'Physics Pendulum',
+    description: 'Realistic pendulum with physics simulation',
+    category: 'games',
+    difficulty: 'intermediate',
+    code: `// Canvas and context are already available as 'canvas' and 'ctx'
+
+let pendulums = [];
+
+class Pendulum {
+  constructor(x, y, length, angle, mass) {
+    this.originX = x;
+    this.originY = y;
+    this.length = length;
+    this.angle = angle;
+    this.angleVelocity = 0;
+    this.angleAcceleration = 0;
+    this.mass = mass;
+    this.damping = 0.999;
+    this.gravity = 0.4;
+  }
+  
+  update() {
+    // Physics calculation
+    this.angleAcceleration = (-this.gravity / this.length) * Math.sin(this.angle);
+    this.angleVelocity += this.angleAcceleration;
+    this.angleVelocity *= this.damping;
+    this.angle += this.angleVelocity;
+  }
+  
+  draw() {
+    const bobX = this.originX + this.length * Math.sin(this.angle);
+    const bobY = this.originY + this.length * Math.cos(this.angle);
+    
+    // Draw string
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(this.originX, this.originY);
+    ctx.lineTo(bobX, bobY);
+    ctx.stroke();
+    
+    // Draw pivot point
+    ctx.fillStyle = '#666666';
+    ctx.beginPath();
+    ctx.arc(this.originX, this.originY, 5, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    // Draw bob
+    const gradient = ctx.createRadialGradient(
+      bobX - 5, bobY - 5, 0,
+      bobX, bobY, this.mass
+    );
+    gradient.addColorStop(0, '#ff6b6b');
+    gradient.addColorStop(1, '#d63031');
+    
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(bobX, bobY, this.mass, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    // Draw shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.beginPath();
+    ctx.ellipse(bobX + 2, bobY + 2, this.mass * 0.8, this.mass * 0.4, 0, 0, 2 * Math.PI);
+    ctx.fill();
+  }
+}
+
+// Create multiple pendulums
+pendulums.push(new Pendulum(canvas.width / 2 - 100, 100, 150, Math.PI / 4, 15));
+pendulums.push(new Pendulum(canvas.width / 2, 100, 200, -Math.PI / 3, 20));
+pendulums.push(new Pendulum(canvas.width / 2 + 100, 100, 120, Math.PI / 6, 12));
+
+let isDragging = false;
+let dragIndex = -1;
+
+canvas.addEventListener('mousedown', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left;
+  const mouseY = e.clientY - rect.top;
+  
+  pendulums.forEach((pendulum, index) => {
+    const bobX = pendulum.originX + pendulum.length * Math.sin(pendulum.angle);
+    const bobY = pendulum.originY + pendulum.length * Math.cos(pendulum.angle);
+    const distance = Math.sqrt((mouseX - bobX) ** 2 + (mouseY - bobY) ** 2);
+    
+    if (distance < pendulum.mass) {
+      isDragging = true;
+      dragIndex = index;
+      pendulum.angleVelocity = 0;
+    }
+  });
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  if (isDragging && dragIndex >= 0) {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    const pendulum = pendulums[dragIndex];
+    const dx = mouseX - pendulum.originX;
+    const dy = mouseY - pendulum.originY;
+    
+    pendulum.angle = Math.atan2(dx, dy);
+  }
+});
+
+canvas.addEventListener('mouseup', () => {
+  isDragging = false;
+  dragIndex = -1;
+});
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Background
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  gradient.addColorStop(0, '#2d3748');
+  gradient.addColorStop(1, '#1a202c');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Update and draw pendulums
+  pendulums.forEach(pendulum => {
+    if (!isDragging || pendulums.indexOf(pendulum) !== dragIndex) {
+      pendulum.update();
+    }
+    pendulum.draw();
+  });
+  
+  // Instructions
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+  ctx.font = '16px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('Click and drag the pendulum bobs!', canvas.width / 2, 30);
+  
+  requestAnimationFrame(animate);
+}
+
+animate();`
   }
 ];
