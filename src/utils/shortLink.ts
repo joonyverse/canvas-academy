@@ -1,22 +1,10 @@
-// Short link generation and sharing utilities
+// Short link generation and sharing utilities using TinyURL API
 
 export interface ShareData {
   exampleId: string;
   exampleTitle: string;
   exampleDescription: string;
   code: string;
-}
-
-// Generate a short hash for the example
-export function generateShortHash(exampleId: string): string {
-  // Simple hash function for demo purposes
-  // In production, you might want to use a proper URL shortening service
-  const hash = exampleId.split('').reduce((acc, char) => {
-    const charCode = char.charCodeAt(0);
-    return ((acc << 5) - acc) + charCode;
-  }, 0);
-  
-  return Math.abs(hash).toString(36).substring(0, 6);
 }
 
 // Create shareable URL
@@ -26,46 +14,79 @@ export function createShareableUrl(exampleId: string, baseUrl: string = window.l
   return url.toString();
 }
 
-// Create short link (for demo purposes, using fragment)
-export function createShortLink(exampleId: string, baseUrl: string = window.location.origin): string {
-  const shortHash = generateShortHash(exampleId);
-  const url = new URL(baseUrl);
-  url.searchParams.set('s', shortHash);
-  return url.toString();
+// Create short link using TinyURL API
+export async function createShortLink(exampleId: string, baseUrl: string = window.location.origin): Promise<string> {
+  const fullUrl = createShareableUrl(exampleId, baseUrl);
+  
+  try {
+    // Use TinyURL API to create short link
+    const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(fullUrl)}`);
+    
+    if (response.ok) {
+      const shortUrl = await response.text();
+      // Validate that we got a proper TinyURL response
+      if (shortUrl.startsWith('http') && shortUrl.includes('tinyurl.com')) {
+        return shortUrl;
+      }
+    }
+    
+    // Fallback to full URL if TinyURL fails
+    return fullUrl;
+  } catch (error) {
+    console.warn('Failed to create short link via TinyURL:', error);
+    // Fallback to full URL if TinyURL fails
+    return fullUrl;
+  }
 }
 
-// Reverse lookup for short hash (in real app, this would be a database lookup)
-export function resolveShortHash(shortHash: string): string | null {
-  // This is a simple demo implementation
-  // In production, you'd store hash->exampleId mappings in a database
+// Alternative short link service using is.gd API
+export async function createShortLinkIsGd(exampleId: string, baseUrl: string = window.location.origin): Promise<string> {
+  const fullUrl = createShareableUrl(exampleId, baseUrl);
   
-  // Generate hash for all possible example IDs and create reverse mapping
-  const exampleIds = [
-    'basic-rectangle',
-    'basic-circle', 
-    'text-drawing',
-    'custom-path',
-    'gradient-background',
-    'bouncing-ball',
-    'mouse-trail',
-    'particle-explosion',
-    'simple-pong'
-  ];
-  
-  // Create reverse mapping
-  const exampleMap: Record<string, string> = {};
-  exampleIds.forEach(id => {
-    const hash = generateShortHash(id);
-    exampleMap[hash] = id;
-  });
-  
-  return exampleMap[shortHash] || null;
+  try {
+    const response = await fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(fullUrl)}`);
+    
+    if (response.ok) {
+      const shortUrl = await response.text();
+      if (shortUrl.startsWith('http') && shortUrl.includes('is.gd')) {
+        return shortUrl;
+      }
+    }
+    
+    return fullUrl;
+  } catch (error) {
+    console.warn('Failed to create short link via is.gd:', error);
+    return fullUrl;
+  }
+}
+
+// Create short link with fallback chain (TinyURL → is.gd → full URL)
+export async function createShortLinkWithFallback(exampleId: string, baseUrl: string = window.location.origin): Promise<string> {
+  try {
+    // Try TinyURL first
+    const tinyUrl = await createShortLink(exampleId, baseUrl);
+    if (tinyUrl !== createShareableUrl(exampleId, baseUrl)) {
+      return tinyUrl;
+    }
+    
+    // Fallback to is.gd
+    const isGdUrl = await createShortLinkIsGd(exampleId, baseUrl);
+    if (isGdUrl !== createShareableUrl(exampleId, baseUrl)) {
+      return isGdUrl;
+    }
+    
+    // Final fallback to full URL
+    return createShareableUrl(exampleId, baseUrl);
+  } catch (error) {
+    console.warn('All short link services failed:', error);
+    return createShareableUrl(exampleId, baseUrl);
+  }
 }
 
 // Share via Web Share API or fallback to clipboard
 export async function shareExample(data: ShareData): Promise<boolean> {
   const shareableUrl = createShareableUrl(data.exampleId);
-  const shortLink = createShortLink(data.exampleId);
+  const shortLink = await createShortLinkWithFallback(data.exampleId);
   
   const shareData = {
     title: `Canvas Academy - ${data.exampleTitle}`,

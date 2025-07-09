@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Share2, Copy, Check, ExternalLink } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Share2, Copy, Check, ExternalLink, Loader } from 'lucide-react';
 import { Example } from '../types';
-import { shareExample, copyToClipboard, createShortLink, createShareableUrl } from '../utils/shortLink';
+import { shareExample, copyToClipboard, createShortLinkWithFallback, createShareableUrl } from '../utils/shortLink';
 
 interface ShareButtonProps {
   example: Example;
@@ -13,6 +13,8 @@ const ShareButton: React.FC<ShareButtonProps> = ({ example, currentCode, classNa
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
   const [shareStatus, setShareStatus] = useState<'idle' | 'sharing' | 'shared' | 'error'>('idle');
+  const [shortLink, setShortLink] = useState<string>('');
+  const [isLoadingShortLink, setIsLoadingShortLink] = useState(false);
 
   const handleShare = async () => {
     setShareStatus('sharing');
@@ -39,7 +41,9 @@ const ShareButton: React.FC<ShareButtonProps> = ({ example, currentCode, classNa
   };
 
   const handleCopyLink = async () => {
-    const shortLink = createShortLink(example.id);
+    if (!shortLink) {
+      await generateShortLink();
+    }
     
     try {
       const success = await copyToClipboard(shortLink);
@@ -74,8 +78,27 @@ const ShareButton: React.FC<ShareButtonProps> = ({ example, currentCode, classNa
     }
   };
 
-  const shortLink = createShortLink(example.id);
   const fullUrl = createShareableUrl(example.id);
+  
+  // Generate short link when component mounts or example changes
+  const generateShortLink = async () => {
+    setIsLoadingShortLink(true);
+    try {
+      const link = await createShortLinkWithFallback(example.id);
+      setShortLink(link);
+    } catch (error) {
+      console.error('Failed to generate short link:', error);
+      setShortLink(fullUrl); // Fallback to full URL
+    } finally {
+      setIsLoadingShortLink(false);
+    }
+  };
+  
+  useEffect(() => {
+    if (showShareMenu && !shortLink) {
+      generateShortLink();
+    }
+  }, [showShareMenu, example.id]);
 
   return (
     <div className={`relative ${className}`}>
@@ -111,26 +134,32 @@ const ShareButton: React.FC<ShareButtonProps> = ({ example, currentCode, classNa
             {/* Short Link */}
             <div className="mb-3">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Short Link
+                Short Link (TinyURL)
               </label>
               <div className="flex items-center space-x-2">
                 <input
                   type="text"
-                  value={shortLink}
+                  value={isLoadingShortLink ? 'Generating short link...' : shortLink || fullUrl}
                   readOnly
                   className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md bg-gray-50 text-gray-600"
                 />
                 <button
                   onClick={handleCopyLink}
-                  className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  disabled={isLoadingShortLink}
+                  className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:bg-gray-100 transition-colors"
                 >
-                  {copyStatus === 'copied' ? (
+                  {isLoadingShortLink ? (
+                    <Loader className="w-4 h-4 animate-spin" />
+                  ) : copyStatus === 'copied' ? (
                     <Check className="w-4 h-4 text-green-600" />
                   ) : (
                     <Copy className="w-4 h-4" />
                   )}
                 </button>
               </div>
+              {shortLink && shortLink !== fullUrl && (
+                <p className="text-xs text-green-600 mt-1">✓ TinyURL generated successfully</p>
+              )}
             </div>
 
             {/* Full URL */}

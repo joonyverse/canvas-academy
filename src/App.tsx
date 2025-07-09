@@ -9,7 +9,7 @@ import { Example } from './types';
 import { examples } from './data/examples';
 import { useProject } from './hooks/useProject';
 import { useUrlState } from './hooks/useUrlState';
-import { resolveShortHash } from './utils/shortLink';
+// TinyURL API를 사용하므로 resolveShortHash 제거
 import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
@@ -36,18 +36,9 @@ function App() {
   useEffect(() => {
     let exampleToLoad: Example | null = null;
     
-    // Check for short hash parameter
-    const shortHash = getParam('s');
-    if (shortHash) {
-      const resolvedId = resolveShortHash(shortHash);
-      if (resolvedId) {
-        exampleToLoad = examples.find(ex => ex.id === resolvedId) || null;
-      }
-    }
-    
-    // Check for direct example parameter
+    // Check for direct example parameter (TinyURL will redirect to this)
     const exampleId = getParam('example');
-    if (exampleId && !exampleToLoad) {
+    if (exampleId) {
       exampleToLoad = examples.find(ex => ex.id === exampleId) || null;
     }
     
@@ -80,7 +71,7 @@ function App() {
     }
 
     // Update URL with selected example
-    updateUrl({ example: example.id, s: null }); // Clear short hash when using direct link
+    updateUrl({ example: example.id });
 
     setSelectedExample(example);
     if (activeFile) {

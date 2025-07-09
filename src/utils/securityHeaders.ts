@@ -9,7 +9,7 @@ export const securityHeaders = {
     "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net", // Allow Monaco editor styles
     "img-src 'self' data: blob:",
     "font-src 'self' data: https://cdn.jsdelivr.net", // Allow Monaco editor fonts
-    "connect-src 'self' https://cdn.jsdelivr.net", // Allow Monaco editor connections
+    "connect-src 'self' https://cdn.jsdelivr.net https://tinyurl.com https://is.gd", // Allow Monaco editor and URL shortening services
     "worker-src 'self' blob:", // blob: needed for web workers
     "object-src 'none'",
     "base-uri 'self'",
