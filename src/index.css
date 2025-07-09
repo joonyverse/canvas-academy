@@ -1,3 +1,31 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Monaco Editor cursor fix */
+.monaco-editor {
+    cursor: text !important;
+}
+
+.monaco-editor .monaco-editor-background {
+    cursor: text !important;
+}
+
+.monaco-editor .monaco-editor-background,
+.monaco-editor .monaco-editor-background .monaco-editor-background {
+    cursor: text !important;
+}
+
+/* Ensure Monaco editor container has proper cursor */
+.monaco-editor-container {
+    cursor: text !important;
+}
+
+/* Fix for any overlay elements that might hide cursor */
+.monaco-editor .monaco-editor-overlaymessage {
+    pointer-events: none !important;
+}
+
+.monaco-editor .monaco-editor-overlaymessage .message {
+    pointer-events: none !important;
+}

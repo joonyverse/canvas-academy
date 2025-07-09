@@ -452,11 +452,9 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
             },
             hover: {
               enabled: true
-            },
-            lightbulb: {
-              enabled: true
             }
           }}
+          className="cursor-text"
         />
 
         {/* Keyboard shortcuts help */}
