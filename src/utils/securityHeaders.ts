@@ -5,11 +5,11 @@ export const securityHeaders = {
   // Content Security Policy
   'Content-Security-Policy': [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-eval' blob:", // 'unsafe-eval' needed for Monaco editor and code execution
-    "style-src 'self' 'unsafe-inline'", // 'unsafe-inline' needed for styled components
+    "script-src 'self' 'unsafe-eval' blob: https://cdn.jsdelivr.net", // Allow Monaco editor CDN
+    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net", // Allow Monaco editor styles
     "img-src 'self' data: blob:",
-    "font-src 'self' data:",
-    "connect-src 'self'",
+    "font-src 'self' data: https://cdn.jsdelivr.net", // Allow Monaco editor fonts
+    "connect-src 'self' https://cdn.jsdelivr.net", // Allow Monaco editor connections
     "worker-src 'self' blob:", // blob: needed for web workers
     "object-src 'none'",
     "base-uri 'self'",
