@@ -92,17 +92,19 @@ const FileItemComponent: React.FC<FileItemProps> = ({
     const ext = fileName.split('.').pop()?.toLowerCase()
     switch (ext) {
       case 'js':
-        return <FileText className="w-4 h-4 text-yellow-500" />
+      case 'jsx':
+        return <FileText className="w-4 h-4 text-gray-500" />
       case 'ts':
-        return <FileText className="w-4 h-4 text-blue-500" />
+      case 'tsx':
+        return <FileText className="w-4 h-4 text-gray-500" />
       case 'css':
-        return <FileText className="w-4 h-4 text-blue-400" />
+        return <FileText className="w-4 h-4 text-gray-500" />
       case 'html':
-        return <FileText className="w-4 h-4 text-orange-500" />
+        return <FileText className="w-4 h-4 text-gray-500" />
       case 'json':
-        return <FileText className="w-4 h-4 text-green-500" />
+        return <FileText className="w-4 h-4 text-gray-500" />
       default:
-        return <File className="w-4 h-4 text-gray-400" />
+        return <File className="w-4 h-4 text-gray-500" />
     }
   }
 
@@ -131,7 +133,7 @@ const FileItemComponent: React.FC<FileItemProps> = ({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setDragOver(false)
-    
+
     if (item.type === 'folder') {
       const draggedItemId = e.dataTransfer.getData('text/plain')
       if (draggedItemId && draggedItemId !== item.id) {
@@ -143,9 +145,8 @@ const FileItemComponent: React.FC<FileItemProps> = ({
   return (
     <div>
       <div
-        className={`flex items-center py-1 px-2 hover:bg-gray-700 cursor-pointer group relative text-sm ${
-          activeFileId === item.id ? 'bg-gray-600' : ''
-        } ${isDragging ? 'opacity-50' : ''} ${dragOver ? 'bg-blue-600' : ''}`}
+        className={`flex items-center py-1 px-2 hover:bg-gray-700 cursor-pointer group relative text-sm ${activeFileId === item.id ? 'bg-gray-600' : ''
+          } ${isDragging ? 'opacity-50' : ''} ${dragOver ? 'bg-blue-600' : ''}`}
         style={{ paddingLeft: `${level * 12 + 8}px` }}
         draggable
         onDragStart={handleDragStart}
@@ -178,9 +179,9 @@ const FileItemComponent: React.FC<FileItemProps> = ({
         <div className="mr-2 flex-shrink-0">
           {item.type === 'folder' ? (
             item.is_open ? (
-              <FolderOpen className="w-4 h-4 text-blue-400" />
+              <FolderOpen className="w-4 h-4 text-gray-500" />
             ) : (
-              <Folder className="w-4 h-4 text-blue-400" />
+              <Folder className="w-4 h-4 text-gray-500" />
             )
           ) : (
             getFileIcon(item.name)
@@ -194,16 +195,16 @@ const FileItemComponent: React.FC<FileItemProps> = ({
             onChange={(e) => setNewName(e.target.value)}
             onBlur={handleRename}
             onKeyDown={handleKeyPress}
-            className="flex-1 px-1 py-0 text-sm bg-gray-800 text-white border border-blue-500 rounded"
+            className="flex-1 px-1 py-0 text-sm bg-white text-gray-700 border border-gray-400 rounded"
             autoFocus
           />
         ) : (
-          <span className="flex-1 text-gray-200 truncate">{item.name}</span>
+          <span className="flex-1 text-gray-700 truncate">{item.name}</span>
         )}
 
         {/* Context Menu */}
         {showContextMenu && (
-          <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-600 rounded-md shadow-lg z-10 min-w-48">
+          <div className="absolute right-0 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10 min-w-48">
             {/* File/Folder operations */}
             {item.type === 'folder' && user && (
               <>
@@ -213,7 +214,7 @@ const FileItemComponent: React.FC<FileItemProps> = ({
                     setShowCreateInput({ type: 'file' })
                     setShowContextMenu(false)
                   }}
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-gray-200 flex items-center space-x-2"
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 text-gray-700 flex items-center space-x-2"
                 >
                   <FilePlus className="w-3 h-3" />
                   <span>New File</span>
@@ -224,15 +225,15 @@ const FileItemComponent: React.FC<FileItemProps> = ({
                     setShowCreateInput({ type: 'folder' })
                     setShowContextMenu(false)
                   }}
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-gray-200 flex items-center space-x-2"
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 text-gray-700 flex items-center space-x-2"
                 >
                   <FolderPlus className="w-3 h-3" />
                   <span>New Folder</span>
                 </button>
-                <div className="border-t border-gray-600 my-1" />
+                <div className="border-t border-gray-300 my-1" />
               </>
             )}
-            
+
             {/* Cut/Copy operations (only for logged in users) */}
             {user ? (
               <>
@@ -242,7 +243,7 @@ const FileItemComponent: React.FC<FileItemProps> = ({
                     // TODO: Implement cut functionality
                     setShowContextMenu(false)
                   }}
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-gray-200 flex items-center space-x-2"
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 text-gray-700 flex items-center space-x-2"
                 >
                   <Scissors className="w-3 h-3" />
                   <span>Cut</span>
@@ -253,30 +254,30 @@ const FileItemComponent: React.FC<FileItemProps> = ({
                     // TODO: Implement copy functionality
                     setShowContextMenu(false)
                   }}
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-gray-200 flex items-center space-x-2"
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 text-gray-700 flex items-center space-x-2"
                 >
                   <Copy className="w-3 h-3" />
                   <span>Copy</span>
                 </button>
-                <div className="border-t border-gray-600 my-1" />
+                <div className="border-t border-gray-300 my-1" />
               </>
             ) : (
               <>
                 <button
                   disabled
-                  className="w-full px-3 py-2 text-left text-sm text-gray-500 cursor-not-allowed flex items-center space-x-2"
+                  className="w-full px-3 py-2 text-left text-sm text-gray-400 cursor-not-allowed flex items-center space-x-2"
                 >
                   <Scissors className="w-3 h-3" />
                   <span>Cut</span>
                 </button>
                 <button
                   disabled
-                  className="w-full px-3 py-2 text-left text-sm text-gray-500 cursor-not-allowed flex items-center space-x-2"
+                  className="w-full px-3 py-2 text-left text-sm text-gray-400 cursor-not-allowed flex items-center space-x-2"
                 >
                   <Copy className="w-3 h-3" />
                   <span>Copy</span>
                 </button>
-                <div className="border-t border-gray-600 my-1" />
+                <div className="border-t border-gray-300 my-1" />
               </>
             )}
 
@@ -294,7 +295,7 @@ const FileItemComponent: React.FC<FileItemProps> = ({
                   URL.revokeObjectURL(url)
                   setShowContextMenu(false)
                 }}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-gray-200 flex items-center space-x-2"
+                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 text-gray-700 flex items-center space-x-2"
               >
                 <Download className="w-3 h-3" />
                 <span>Download</span>
@@ -309,7 +310,7 @@ const FileItemComponent: React.FC<FileItemProps> = ({
                   setIsRenaming(true)
                   setShowContextMenu(false)
                 }}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-gray-200 flex items-center space-x-2"
+                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 text-gray-700 flex items-center space-x-2"
               >
                 <Edit3 className="w-3 h-3" />
                 <span>Rename</span>
@@ -317,14 +318,14 @@ const FileItemComponent: React.FC<FileItemProps> = ({
             ) : (
               <button
                 disabled
-                className="w-full px-3 py-2 text-left text-sm text-gray-500 cursor-not-allowed flex items-center space-x-2"
+                className="w-full px-3 py-2 text-left text-sm text-gray-400 cursor-not-allowed flex items-center space-x-2"
               >
                 <Edit3 className="w-3 h-3" />
                 <span>Rename</span>
               </button>
             )}
 
-            <div className="border-t border-gray-600 my-1" />
+            <div className="border-t border-gray-300 my-1" />
 
             {/* Delete (only for logged in users) */}
             {user ? (
@@ -334,7 +335,7 @@ const FileItemComponent: React.FC<FileItemProps> = ({
                   onDelete(item.id)
                   setShowContextMenu(false)
                 }}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-red-400 flex items-center space-x-2"
+                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 text-red-600 flex items-center space-x-2"
               >
                 <Trash2 className="w-3 h-3" />
                 <span>Delete</span>
@@ -342,7 +343,7 @@ const FileItemComponent: React.FC<FileItemProps> = ({
             ) : (
               <button
                 disabled
-                className="w-full px-3 py-2 text-left text-sm text-gray-500 cursor-not-allowed flex items-center space-x-2"
+                className="w-full px-3 py-2 text-left text-sm text-gray-400 cursor-not-allowed flex items-center space-x-2"
               >
                 <Trash2 className="w-3 h-3" />
                 <span>Delete</span>
@@ -360,7 +361,7 @@ const FileItemComponent: React.FC<FileItemProps> = ({
         >
           <div className="mr-2 flex-shrink-0">
             {showCreateInput.type === 'folder' ? (
-              <Folder className="w-4 h-4 text-blue-400" />
+              <Folder className="w-4 h-4 text-gray-500" />
             ) : (
               <File className="w-4 h-4 text-gray-400" />
             )}
@@ -387,7 +388,7 @@ const FileItemComponent: React.FC<FileItemProps> = ({
               setShowCreateInput({ type: null })
             }}
             placeholder={`${showCreateInput.type === 'folder' ? 'Folder' : 'File'} name...`}
-            className="flex-1 px-1 py-0 text-sm bg-gray-800 text-white border border-blue-500 rounded"
+            className="flex-1 px-1 py-0 text-sm bg-white text-gray-700 border border-gray-400 rounded"
             autoFocus
           />
         </div>
@@ -483,7 +484,7 @@ const VscodeExplorer: React.FC<VscodeExplorerProps> = ({ onCodeChange }) => {
     if (file && file.type === 'file' && onCodeChange) {
       onCodeChange(file.content || '')
     }
-    
+
     // Update project's active file
     if (activeProject && activeProject.active_file_id !== fileId) {
       updateProject(activeProject.id, { active_file_id: fileId })
@@ -532,7 +533,7 @@ const VscodeExplorer: React.FC<VscodeExplorerProps> = ({ onCodeChange }) => {
         parent_id: parentId || null,
         is_open: false
       })
-      
+
       addProjectFile(newFile)
     } catch (error) {
       console.error('Error creating file:', error)
@@ -550,19 +551,19 @@ const VscodeExplorer: React.FC<VscodeExplorerProps> = ({ onCodeChange }) => {
 
   if (!activeProject) {
     return (
-      <div className="bg-gray-800 text-gray-200 h-full flex flex-col">
-        <div className="px-3 py-2 border-b border-gray-700">
-          <div className="flex items-center space-x-2 text-xs font-semibold text-gray-300 uppercase tracking-wide">
+      <div className="bg-gray-50 text-gray-700 h-full flex flex-col">
+        <div className="px-3 py-2 border-b border-gray-300 h-12 flex items-center">
+          <div className="flex items-center space-x-2 text-xs font-semibold text-gray-600 uppercase tracking-wide">
             <ChevronRight className="w-3 h-3" />
             <span>Explorer</span>
           </div>
         </div>
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="text-center">
-            <Code className="w-8 h-8 text-gray-500 mx-auto mb-2" />
-            <p className="text-sm text-gray-400">No project selected</p>
+            <Code className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-500">No project selected</p>
             {!user && (
-              <p className="text-xs text-gray-500 mt-1">Sign in to create and manage projects</p>
+              <p className="text-xs text-gray-400 mt-1">Sign in to create and manage projects</p>
             )}
           </div>
         </div>
@@ -571,12 +572,12 @@ const VscodeExplorer: React.FC<VscodeExplorerProps> = ({ onCodeChange }) => {
   }
 
   return (
-    <div className="bg-gray-800 text-gray-200 h-full flex flex-col">
+    <div className="bg-gray-50 text-gray-700 h-full flex flex-col">
       {/* Header */}
-      <div className="px-3 py-2 border-b border-gray-700">
+      <div className="px-3 py-2 border-b border-gray-300 h-12 flex items-center">
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center space-x-2 text-xs font-semibold text-gray-300 uppercase tracking-wide hover:text-white w-full"
+          className="flex items-center space-x-2 text-xs font-semibold text-gray-600 uppercase tracking-wide hover:text-gray-800 w-full"
         >
           {isExpanded ? (
             <ChevronDown className="w-3 h-3" />
@@ -591,10 +592,10 @@ const VscodeExplorer: React.FC<VscodeExplorerProps> = ({ onCodeChange }) => {
         <>
           {/* Project Section */}
           <div className="flex-1 overflow-y-auto">
-            <div className="px-3 py-2 border-b border-gray-700 group">
+            <div className="px-3 py-2 border-b border-gray-300 group">
               <div className="flex items-center justify-between">
                 <button
-                  className="flex items-center space-x-2 text-xs font-semibold text-gray-300 uppercase tracking-wide hover:text-white"
+                  className="flex items-center space-x-2 text-xs font-semibold text-gray-600 uppercase tracking-wide hover:text-gray-800"
                 >
                   <ChevronDown className="w-3 h-3" />
                   <span>{activeProject.title}</span>
@@ -603,21 +604,21 @@ const VscodeExplorer: React.FC<VscodeExplorerProps> = ({ onCodeChange }) => {
                   {user && (
                     <button
                       onClick={() => setShowCreateMenu(true)}
-                      className="p-1 hover:bg-gray-700 rounded opacity-0 group-hover:opacity-100"
+                      className="p-1 hover:bg-gray-200 rounded opacity-0 group-hover:opacity-100"
                       title="New File/Folder"
                     >
-                      <Plus className="w-3 h-3 text-gray-400" />
+                      <Plus className="w-3 h-3 text-gray-500" />
                     </button>
                   )}
 
                   {showCreateMenu && (
-                    <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-600 rounded-md shadow-lg z-10 min-w-32">
+                    <div className="absolute right-0 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-10 min-w-32">
                       <button
                         onClick={() => {
                           setShowRootCreateInput({ type: 'file' })
                           setShowCreateMenu(false)
                         }}
-                        className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-gray-200 flex items-center space-x-2"
+                        className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 text-gray-700 flex items-center space-x-2"
                       >
                         <File className="w-3 h-3" />
                         <span>New File</span>
@@ -627,7 +628,7 @@ const VscodeExplorer: React.FC<VscodeExplorerProps> = ({ onCodeChange }) => {
                           setShowRootCreateInput({ type: 'folder' })
                           setShowCreateMenu(false)
                         }}
-                        className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-gray-200 flex items-center space-x-2"
+                        className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 text-gray-700 flex items-center space-x-2"
                       >
                         <Folder className="w-3 h-3" />
                         <span>New Folder</span>
@@ -639,7 +640,7 @@ const VscodeExplorer: React.FC<VscodeExplorerProps> = ({ onCodeChange }) => {
             </div>
 
             {/* File Tree */}
-            <div 
+            <div
               className="py-1"
               onDragOver={(e) => {
                 e.preventDefault()
@@ -667,15 +668,15 @@ const VscodeExplorer: React.FC<VscodeExplorerProps> = ({ onCodeChange }) => {
                   onMove={handleFileMove}
                 />
               ))}
-              
+
               {/* Root level create input */}
               {showRootCreateInput.type && (
                 <div className="flex items-center py-1 px-2 text-sm" style={{ paddingLeft: '8px' }}>
                   <div className="mr-2 flex-shrink-0">
                     {showRootCreateInput.type === 'folder' ? (
-                      <Folder className="w-4 h-4 text-blue-400" />
+                      <Folder className="w-4 h-4 text-gray-500" />
                     ) : (
-                      <File className="w-4 h-4 text-gray-400" />
+                      <File className="w-4 h-4 text-gray-500" />
                     )}
                   </div>
                   <input
@@ -700,7 +701,7 @@ const VscodeExplorer: React.FC<VscodeExplorerProps> = ({ onCodeChange }) => {
                       setShowRootCreateInput({ type: null })
                     }}
                     placeholder={`${showRootCreateInput.type === 'folder' ? 'Folder' : 'File'} name...`}
-                    className="flex-1 px-1 py-0 text-sm bg-gray-800 text-white border border-blue-500 rounded"
+                    className="flex-1 px-1 py-0 text-sm bg-white text-gray-700 border border-gray-400 rounded"
                     autoFocus
                   />
                 </div>

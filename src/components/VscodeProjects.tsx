@@ -86,19 +86,19 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
 
   const handleDeleteProject = async () => {
     if (!deletingProject) return
-    
+
     try {
       setIsDeleting(true)
       await deleteProject(deletingProject.id)
       setProjects(projects.filter(p => p.id !== deletingProject.id))
-      
+
       // Clear active project if it was deleted
       if (activeProject?.id === deletingProject.id) {
         setActiveProject(null)
         setProjectFiles([])
         setActiveFileId(null)
       }
-      
+
       setShowDeleteDialog(false)
       setDeletingProject(null)
     } catch (error) {
@@ -112,11 +112,11 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
   const handleSelectProject = async (project: Project) => {
     try {
       setActiveProject(project)
-      
+
       // Load project files
       const files = await getProjectFiles(project.id)
       setProjectFiles(files)
-      
+
       // Set active file if project has one
       if (project.active_file_id) {
         setActiveFileId(project.active_file_id)
@@ -124,7 +124,7 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
         // Default to first file
         setActiveFileId(files[0].id)
       }
-      
+
       // Call the onProjectLoad callback if provided
       onProjectLoad?.(project)
     } catch (error) {
@@ -135,18 +135,18 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
 
   const handleUpdateProject = async (updates: Partial<Project>) => {
     if (!editingProject) return
-    
+
     try {
       const updatedProject = await updateProject(editingProject.id, updates)
-      setProjects(prev => 
+      setProjects(prev =>
         prev.map(p => p.id === editingProject.id ? updatedProject : p)
       )
-      
+
       // Update active project if it was edited
       if (activeProject?.id === editingProject.id) {
         setActiveProject(updatedProject)
       }
-      
+
       setEditingProject(null)
     } catch (error) {
       console.error('Error updating project:', error)
@@ -172,9 +172,9 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
         project_type: projectData.project_type,
         visibility: projectData.visibility
       })
-      
+
       setProjects(prev => [newProject, ...prev])
-      
+
       // Auto-select the new project
       handleSelectProject(newProject)
     } catch (error) {
@@ -212,7 +212,7 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
       if (activeProject) {
         // Update existing project
         result = await updateProject(activeProject.id, projectData)
-        setProjects(prev => 
+        setProjects(prev =>
           prev.map(p => p.id === activeProject.id ? result : p)
         )
         setActiveProject(result)
@@ -222,7 +222,7 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
         setProjects(prev => [result, ...prev])
         handleSelectProject(result)
       }
-      
+
       // Reset error state after successful save
       setTimeout(() => setSaveError(null), 2000)
     } catch (error) {
@@ -252,7 +252,7 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
     const now = new Date()
     const diff = now.getTime() - date.getTime()
     const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-    
+
     if (days === 0) {
       return 'Today'
     } else if (days === 1) {
@@ -260,8 +260,8 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
     } else if (days < 7) {
       return `${days} days ago`
     } else {
-      return date.toLocaleDateString('en-US', { 
-        month: 'short', 
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
         day: 'numeric'
       })
     }
@@ -274,17 +274,17 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
 
   if (!user) {
     return (
-      <div className="bg-gray-800 text-gray-200 h-full flex flex-col">
-        <div className="px-3 py-2 border-b border-gray-700">
-          <div className="flex items-center space-x-2 text-xs font-semibold text-gray-300 uppercase tracking-wide">
+      <div className="bg-gray-50 text-gray-700 h-full flex flex-col">
+        <div className="px-3 py-2 border-b border-gray-300 h-12 flex items-center">
+          <div className="flex items-center space-x-2 text-xs font-semibold text-gray-600 uppercase tracking-wide">
             <ChevronRight className="w-3 h-3" />
             <span>Projects</span>
           </div>
         </div>
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="text-center">
-            <User className="w-8 h-8 text-gray-500 mx-auto mb-2" />
-            <p className="text-sm text-gray-400">Sign in to view projects</p>
+            <User className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-500">Sign in to view projects</p>
           </div>
         </div>
       </div>
@@ -292,13 +292,13 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
   }
 
   return (
-    <div className="bg-gray-800 text-gray-200 h-full flex flex-col">
+    <div className="bg-gray-50 text-gray-700 h-full flex flex-col">
       {/* Header */}
-      <div className="px-3 py-2 border-b border-gray-700">
+      <div className="px-3 py-2 border-b border-gray-300 h-12 flex items-center">
         <div className="flex items-center justify-between">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center space-x-2 text-xs font-semibold text-gray-300 uppercase tracking-wide hover:text-white"
+            className="flex items-center space-x-2 text-xs font-semibold text-gray-600 uppercase tracking-wide hover:text-gray-800"
           >
             {isExpanded ? (
               <ChevronDown className="w-3 h-3" />
@@ -307,22 +307,20 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
             )}
             <span>Projects</span>
           </button>
-          
+
           {user && (
             <div className="flex items-center space-x-1">
               <button
                 onClick={handleSaveCurrentProject}
                 disabled={isSaving}
-                className={`p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-white disabled:opacity-50 ${
-                  isSaving ? 'animate-pulse' : ''
-                }`}
+                className={`p-1 hover:bg-gray-200 rounded text-gray-500 hover:text-gray-700 disabled:opacity-50 ${isSaving ? 'animate-pulse' : ''}`}
                 title={activeProject ? 'Update Current Project' : 'Save as New Project'}
               >
                 <Save className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setShowCreateDialog(true)}
-                className="p-1 hover:bg-gray-700 rounded text-gray-400 hover:text-white"
+                className="p-1 hover:bg-gray-200 rounded text-gray-500 hover:text-gray-700"
                 title="Create New Project"
               >
                 <Plus className="w-4 h-4" />
@@ -335,7 +333,7 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
       {isExpanded && (
         <>
           {/* Search */}
-          <div className="px-3 py-2 border-b border-gray-700">
+          <div className="px-3 py-2 border-b border-gray-300">
             <div className="relative">
               <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400" />
               <input
@@ -343,11 +341,11 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
                 placeholder="Search projects..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-7 pr-2 py-1 bg-gray-700 text-gray-200 text-xs border border-gray-600 rounded placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                className="w-full pl-7 pr-2 py-1 bg-white text-gray-700 text-xs border border-gray-300 rounded placeholder-gray-400 focus:outline-none focus:border-gray-400"
               />
             </div>
             {saveError && (
-              <div className="mt-2 text-xs text-red-400 flex items-center space-x-1">
+              <div className="mt-2 text-xs text-red-500 flex items-center space-x-1">
                 <AlertCircle className="w-3 h-3" />
                 <span>{saveError}</span>
               </div>
@@ -358,27 +356,27 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
           <div className="flex-1 overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center p-4">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500"></div>
               </div>
             ) : error ? (
               <div className="p-4 text-center">
-                <AlertCircle className="w-5 h-5 text-red-400 mx-auto mb-2" />
-                <p className="text-xs text-red-400 mb-2">{error}</p>
+                <AlertCircle className="w-5 h-5 text-red-500 mx-auto mb-2" />
+                <p className="text-xs text-red-500 mb-2">{error}</p>
                 <button
                   onClick={loadProjects}
-                  className="text-xs text-blue-400 hover:text-blue-300"
+                  className="text-xs text-gray-600 hover:text-gray-800"
                 >
                   Try again
                 </button>
               </div>
             ) : filteredProjects.length === 0 ? (
               <div className="p-4 text-center">
-                <Code className="w-6 h-6 text-gray-500 mx-auto mb-2" />
-                <p className="text-xs text-gray-400 mb-1">
+                <Code className="w-6 h-6 text-gray-400 mx-auto mb-2" />
+                <p className="text-xs text-gray-500 mb-1">
                   {searchTerm ? 'No projects found' : 'No projects yet'}
                 </p>
                 {!searchTerm && (
-                  <p className="text-xs text-gray-500">Save your first project to see it here</p>
+                  <p className="text-xs text-gray-400">Save your first project to see it here</p>
                 )}
               </div>
             ) : (
@@ -386,22 +384,20 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
                 {filteredProjects.map((project) => (
                   <div
                     key={project.id}
-                    className={`flex items-center py-1 px-3 hover:bg-gray-700 cursor-pointer group text-sm ${
-                      activeProject?.id === project.id ? 'bg-gray-600' : ''
-                    }`}
+                    className={`flex items-center py-1 px-3 hover:bg-gray-100 cursor-pointer group text-sm ${activeProject?.id === project.id ? 'bg-gray-200' : ''}`}
                     onClick={() => handleSelectProject(project)}
                     onContextMenu={(e) => handleContextMenu(e, project)}
                   >
-                    <File className="w-4 h-4 text-blue-400 mr-2 flex-shrink-0" />
+                    <File className="w-4 h-4 text-gray-500 mr-2 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="text-gray-200 truncate">{project.title}</span>
+                        <span className="text-gray-700 truncate">{project.title}</span>
                         <span className="text-xs text-gray-500 ml-2">
                           {formatDate(project.updated_at)}
                         </span>
                       </div>
                       {project.description && (
-                        <p className="text-xs text-gray-400 truncate mt-0.5">
+                        <p className="text-xs text-gray-500 truncate mt-0.5">
                           {project.description}
                         </p>
                       )}
@@ -410,14 +406,14 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
                           {project.tags.slice(0, 2).map(tag => (
                             <span
                               key={tag}
-                              className="inline-flex items-center px-1 py-0.5 bg-gray-600 text-gray-300 text-xs rounded"
+                              className="inline-flex items-center px-1 py-0.5 bg-gray-200 text-gray-600 text-xs rounded"
                             >
                               <Tag className="w-2 h-2 mr-1" />
                               {tag}
                             </span>
                           ))}
                           {project.tags.length > 2 && (
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-gray-400">
                               +{project.tags.length - 2}
                             </span>
                           )}
@@ -435,7 +431,7 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
       {/* Context Menu */}
       {contextMenu.show && contextMenu.project && (
         <div
-          className="fixed bg-gray-800 border border-gray-600 rounded-md shadow-lg z-50 min-w-48"
+          className="fixed bg-white border border-gray-300 rounded-md shadow-lg z-50 min-w-48"
           style={{
             left: contextMenu.x,
             top: contextMenu.y
@@ -447,14 +443,14 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
               handleSelectProject(contextMenu.project!)
               closeContextMenu()
             }}
-            className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-gray-200 flex items-center space-x-2"
+            className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 text-gray-700 flex items-center space-x-2"
           >
             <ExternalLink className="w-3 h-3" />
             <span>Open Project</span>
           </button>
-          
+
           <div className="border-t border-gray-600 my-1" />
-          
+
           {/* Copy Project URL */}
           <button
             onClick={() => {
@@ -466,7 +462,7 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
             <Copy className="w-3 h-3" />
             <span>Copy Project URL</span>
           </button>
-          
+
           {/* Share Project */}
           <button
             onClick={() => {
@@ -478,12 +474,12 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
             <Share className="w-3 h-3" />
             <span>Share Project</span>
           </button>
-          
+
           {/* Download Project */}
           <button
             onClick={() => {
               const dataStr = JSON.stringify(contextMenu.project, null, 2)
-              const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
+              const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr)
               const exportFileDefaultName = `${contextMenu.project!.title}.json`
               const linkElement = document.createElement('a')
               linkElement.setAttribute('href', dataUri)
@@ -496,9 +492,9 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
             <Download className="w-3 h-3" />
             <span>Download Project</span>
           </button>
-          
+
           <div className="border-t border-gray-600 my-1" />
-          
+
           {/* Toggle Visibility (only for project owner) */}
           {user && contextMenu.project!.user_id === user.id && (
             <button
@@ -513,7 +509,7 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
               <span>Make {contextMenu.project!.is_public ? 'Private' : 'Public'}</span>
             </button>
           )}
-          
+
           {/* Edit Project (only for project owner) */}
           {user && contextMenu.project!.user_id === user.id && (
             <button
@@ -527,9 +523,9 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
               <span>Edit Project</span>
             </button>
           )}
-          
+
           <div className="border-t border-gray-600 my-1" />
-          
+
           {/* Delete Project (only for project owner) */}
           {user && contextMenu.project!.user_id === user.id ? (
             <button
@@ -569,7 +565,7 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
         onClose={() => setShowCreateDialog(false)}
         onCreate={handleCreateProject}
       />
-      
+
       {/* Project Edit Dialog */}
       {editingProject && (
         <ProjectEditDialog
@@ -579,7 +575,7 @@ const VscodeProjects: React.FC<VscodeProjectsProps> = ({ onProjectLoad, currentC
           onSave={handleUpdateProject}
         />
       )}
-      
+
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
         isOpen={showDeleteDialog}

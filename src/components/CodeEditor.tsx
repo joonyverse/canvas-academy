@@ -31,7 +31,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
 
   const handleSave = async () => {
     if (!getActiveFile()) return;
-    
+
     try {
       setIsSaving(true);
       await saveActiveFile(code);
@@ -45,7 +45,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
   const handleCodeChange = (value: string | undefined) => {
     const newCode = value || '';
     onChange(newCode);
-    
+
     // Check if content has changed
     const activeFile = getActiveFile();
     if (activeFile && activeFile.content !== newCode) {
@@ -95,30 +95,30 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
   const handleFileRead = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    
+
     setIsUploading(true);
     setUploadError(null);
-    
+
     try {
       const validation = await validateAndSanitizeFile(file, {
         maxSize: 100 * 1024, // 100KB
         allowedExtensions: ['.js', '.txt'],
         maxLines: 2000
       });
-      
+
       if (!validation.isValid) {
         setUploadError(validation.error || 'File validation failed');
         return;
       }
-      
+
       if (validation.sanitizedContent) {
         onChange(validation.sanitizedContent);
-        
+
         // Show success message briefly
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       }
-      
+
     } catch (error) {
       setUploadError(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
@@ -216,82 +216,71 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
 
   return (
     <div className={`flex flex-col ${isFullscreen ? 'fixed inset-0 z-50 bg-white' : 'h-full'}`}>
-      <div className="flex items-center justify-between p-4 bg-gray-100 border-b border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900">Code Editor</h3>
-        <div className="flex items-center space-x-2">
+      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-gray-100 to-gray-200 border-b border-gray-300 h-12">
+        <div className="flex items-center space-x-3">
+          <h3 className="text-sm font-bold font-mont tracking-wide flex items-center space-x-2">
+            <span>Code</span>
+            <span>Editor</span>
+          </h3>
+          {hasUnsavedChanges && (
+            <div className="flex items-center space-x-1 text-xs text-amber-600">
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></div>
+              <span>Unsaved</span>
+            </div>
+          )}
+        </div>
+        <div className="flex items-center space-x-1.5">
           <button
             onClick={handleSave}
             disabled={isSaving || !getActiveFile()}
-            className={`flex items-center space-x-2 px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${
-              hasUnsavedChanges 
-                ? 'text-blue-700 bg-blue-50 border-blue-300 hover:bg-blue-100' 
-                : 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50'
-            } disabled:bg-gray-200 disabled:cursor-not-allowed`}
-            title="Save File (Ctrl+S)"
+            className={`w-10 h-10 flex items-center justify-center rounded-md text-gray-600 hover:text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50 ${hasUnsavedChanges ? 'border border-gray-400' : ''}`}
+            title="Save (Ctrl+S)"
           >
-            <Save className="w-4 h-4" />
-            <span>{isSaving ? 'Saving...' : hasUnsavedChanges ? 'Save*' : 'Save'}</span>
+            <Save className="w-5 h-5" />
           </button>
-          
           <button
             onClick={() => setShowSettings(!showSettings)}
-            className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+            className="w-10 h-10 flex items-center justify-center rounded-md text-gray-600 hover:text-gray-700 hover:bg-gray-100 transition-colors"
             title="Settings"
           >
-            <Settings className="w-4 h-4" />
+            <Settings className="w-5 h-5" />
           </button>
-          
-          <button
-            onClick={formatCode}
-            className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-            title="Format Code (Shift+Alt+F)"
-          >
-            <span>Format</span>
-          </button>
-
           <button
             onClick={handleUpload}
             disabled={isUploading}
-            className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-300 hover:bg-gray-50 disabled:bg-gray-200 disabled:cursor-not-allowed transition-colors"
+            className="w-10 h-10 flex items-center justify-center rounded-md text-gray-600 hover:text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50"
             title="Upload File (.js, .txt - max 100KB)"
           >
-            <Upload className="w-4 h-4" />
-            {isUploading && <span className="animate-spin">⏳</span>}
+            <Upload className="w-5 h-5" />
           </button>
-
           <button
             onClick={handleDownload}
-            className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+            className="w-10 h-10 flex items-center justify-center rounded-md text-gray-600 hover:text-gray-700 hover:bg-gray-100 transition-colors"
             title="Download Code"
           >
-            <Download className="w-4 h-4" />
+            <Download className="w-5 h-5" />
           </button>
-
           <button
             onClick={handleCopy}
-            className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+            className={`w-10 h-10 flex items-center justify-center rounded-md transition-colors ${copied ? 'text-green-600 bg-green-50 border border-green-400' : 'text-gray-600 hover:text-gray-700 hover:bg-gray-100'}`}
+            title="Copy"
           >
-            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            <span>{copied ? 'Copied!' : 'Copy'}</span>
+            {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
           </button>
-
           <button
             onClick={toggleFullscreen}
-            className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+            className="w-10 h-10 flex items-center justify-center rounded-md text-gray-600 hover:text-gray-700 hover:bg-gray-100 transition-colors"
             title="Toggle Fullscreen"
           >
-            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
           </button>
-          
           <button
             onClick={onReset}
-            className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+            className="w-10 h-10 flex items-center justify-center rounded-md text-gray-600 hover:text-gray-700 hover:bg-gray-100 transition-colors"
             title="Reset Code (Ctrl+R)"
           >
-            <RotateCcw className="w-4 h-4" />
-            <span>Reset</span>
+            <RotateCcw className="w-5 h-5" />
           </button>
-          
         </div>
       </div>
 
@@ -315,11 +304,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
         <div className="p-4 bg-gray-50 border-b border-gray-200">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Font Size</label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Font Size</label>
               <select
                 value={editorSettings.fontSize}
                 onChange={(e) => updateEditorSettings('fontSize', parseInt(e.target.value))}
-                className="w-full px-3 py-1 text-sm border border-gray-300 rounded-md"
+                className="w-full px-3 py-1 text-xs bg-white border border-gray-300 rounded-md text-gray-700 focus:border-gray-400 focus:outline-none"
               >
                 <option value={12}>12px</option>
                 <option value={14}>14px</option>
@@ -330,11 +319,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Theme</label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Theme</label>
               <select
                 value={editorSettings.theme}
                 onChange={(e) => updateEditorSettings('theme', e.target.value)}
-                className="w-full px-3 py-1 text-sm border border-gray-300 rounded-md"
+                className="w-full px-3 py-1 text-xs bg-white border border-gray-300 rounded-md text-gray-700 focus:border-gray-400 focus:outline-none"
               >
                 <option value="vs">Light</option>
                 <option value="vs-dark">Dark</option>
@@ -343,11 +332,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Word Wrap</label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Word Wrap</label>
               <select
                 value={editorSettings.wordWrap}
                 onChange={(e) => updateEditorSettings('wordWrap', e.target.value)}
-                className="w-full px-3 py-1 text-sm border border-gray-300 rounded-md"
+                className="w-full px-3 py-1 text-xs bg-white border border-gray-300 rounded-md text-gray-700 focus:border-gray-400 focus:outline-none"
               >
                 <option value="on">On</option>
                 <option value="off">Off</option>
@@ -355,11 +344,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Line Numbers</label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Line Numbers</label>
               <select
                 value={editorSettings.lineNumbers}
                 onChange={(e) => updateEditorSettings('lineNumbers', e.target.value)}
-                className="w-full px-3 py-1 text-sm border border-gray-300 rounded-md"
+                className="w-full px-3 py-1 text-xs bg-white border border-gray-300 rounded-md text-gray-700 focus:border-gray-400 focus:outline-none"
               >
                 <option value="on">On</option>
                 <option value="off">Off</option>
@@ -367,11 +356,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Minimap</label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Minimap</label>
               <select
                 value={editorSettings.minimap ? 'on' : 'off'}
                 onChange={(e) => updateEditorSettings('minimap', e.target.value === 'on')}
-                className="w-full px-3 py-1 text-sm border border-gray-300 rounded-md"
+                className="w-full px-3 py-1 text-xs bg-white border border-gray-300 rounded-md text-gray-700 focus:border-gray-400 focus:outline-none"
               >
                 <option value="off">Off</option>
                 <option value="on">On</option>
@@ -380,7 +369,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
           </div>
         </div>
       )}
-      
+
       <div className="flex-1 relative">
         <Editor
           height="100%"
@@ -469,7 +458,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
             }
           }}
         />
-        
+
         {/* Keyboard shortcuts help */}
         <div className="absolute bottom-2 right-2 text-xs text-gray-500 bg-white bg-opacity-90 px-2 py-1 rounded shadow-sm">
           <div>Ctrl+Enter: Run • Ctrl+R: Reset • Shift+Alt+F: Format</div>

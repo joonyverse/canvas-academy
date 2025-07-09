@@ -59,8 +59,8 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
       if (this.props.fallback) {
         const FallbackComponent = this.props.fallback;
         return (
-          <FallbackComponent 
-            error={this.state.error!} 
+          <FallbackComponent
+            error={this.state.error!}
             retry={this.handleRetry}
           />
         );
@@ -79,7 +79,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
                 </p>
               </div>
             </div>
-            
+
             <div className="mb-4 p-3 bg-red-50 rounded-lg">
               <p className="text-sm font-medium text-red-800">Error Details:</p>
               <p className="text-sm text-red-700 mt-1">
@@ -90,12 +90,12 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
             <div className="flex space-x-3">
               <button
                 onClick={this.handleRetry}
-                className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
               >
                 <RefreshCw className="w-4 h-4" />
                 <span>Try Again</span>
               </button>
-              
+
               <button
                 onClick={() => window.location.reload()}
                 className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"

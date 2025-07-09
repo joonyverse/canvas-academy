@@ -618,6 +618,7 @@ function getTextPoints(text, fontSize) {
   ctx.fillText(text, tempWidth / 2, tempHeight / 2);
   
   // Get image data from the temporary area
+  // Note: willReadFrequently is set on the canvas element, not getImageData
   const imageData = ctx.getImageData(0, 0, tempWidth, tempHeight);
   const points = [];
   

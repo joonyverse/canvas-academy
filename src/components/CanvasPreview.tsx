@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { AlertTriangle, RotateCcw, Terminal } from 'lucide-react';
+import { AlertTriangle, RotateCcw, Terminal, Play } from 'lucide-react';
 import { useSecureCanvasExecutor } from '../hooks/useSecureCanvasExecutor';
 
 interface CanvasPreviewProps {
@@ -167,24 +167,33 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun, o
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between p-4 bg-gray-100 border-b border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900">Canvas Preview</h3>
-        <div className="flex items-center space-x-2">
+      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-gray-200 to-gray-100 border-b border-gray-300 h-12">
+        <div className="flex items-center space-x-3">
+          <h3 className="text-sm font-bold font-mont tracking-wide flex items-center space-x-2">
+            <span>Canvas</span>
+            <span>Preview</span>
+          </h3>
+          {isRunning && (
+            <div className="flex items-center space-x-1 text-xs text-emerald-600">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+              <span>Running</span>
+            </div>
+          )}
+        </div>
+        <div className="flex items-center space-x-1.5">
           <button
             onClick={() => setShowConsole(!showConsole)}
-            className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+            className={`w-10 h-10 flex items-center justify-center rounded-md transition-colors ${logs.length > 0 ? 'text-amber-600 bg-amber-50 border border-amber-200 hover:bg-amber-100' : 'text-gray-600 hover:text-emerald-600 hover:bg-emerald-50'}`}
             title="Toggle Console"
           >
-            <Terminal className="w-4 h-4" />
-            <span>Console ({logs.length})</span>
+            <Terminal className="w-5 h-5" />
           </button>
-
           <button
             onClick={isRunning ? clearCanvas : onRun}
-            className={`flex items-center space-x-2 px-3 py-1.5 text-sm font-medium border ${isRunning ? 'text-red-600 bg-red-100 border-red-200 hover:bg-red-50' : 'text-white bg-blue-600 border-blue-700 hover:bg-blue-700'} rounded-lg transition-colors`}
-            title="Run (Ctrl+Enter)"
+            className="w-10 h-10 flex items-center justify-center rounded-md text-emerald-600 hover:bg-emerald-50 transition-colors"
+            title={isRunning ? 'Stop (Ctrl+Enter)' : 'Run (Ctrl+Enter)'}
           >
-            <span>{isRunning ? 'Stop' : 'Run'}</span>
+            {isRunning ? <RotateCcw className="w-5 h-5" /> : <Play className="w-5 h-5" />}
           </button>
         </div>
       </div>
@@ -236,7 +245,14 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun, o
           ) : (
             <div className="relative">
               <canvas
-                ref={canvasRef}
+                ref={(canvas) => {
+                  if (canvas) {
+                    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                    if (ctx && canvasRef) {
+                      canvasRef.current = canvas;
+                    }
+                  }
+                }}
                 width={canvasSize.width}
                 height={canvasSize.height}
                 className="border border-gray-300 rounded-lg shadow-lg bg-white"

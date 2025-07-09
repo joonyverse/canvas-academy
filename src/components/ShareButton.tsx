@@ -19,7 +19,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({ example, currentCode, classNa
 
   const handleShare = async () => {
     setShareStatus('sharing');
-    
+
     try {
       const success = await shareExample({
         exampleId: example.id,
@@ -27,7 +27,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({ example, currentCode, classNa
         exampleDescription: example.description,
         code: currentCode || example.code
       });
-      
+
       if (success) {
         setShareStatus('shared');
         setTimeout(() => setShareStatus('idle'), 2000);
@@ -45,7 +45,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({ example, currentCode, classNa
     if (!shortLink) {
       await generateShortLink();
     }
-    
+
     try {
       const success = await copyToClipboard(shortLink);
       if (success) {
@@ -62,7 +62,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({ example, currentCode, classNa
   };
 
   const fullUrl = createShareableUrl(example.id);
-  
+
   const generateShortLink = async () => {
     setIsLoadingShortLink(true);
     try {
@@ -75,7 +75,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({ example, currentCode, classNa
       setIsLoadingShortLink(false);
     }
   };
-  
+
   useEffect(() => {
     if (showShareMenu && !shortLink) {
       generateShortLink();
@@ -113,19 +113,19 @@ const ShareButton: React.FC<ShareButtonProps> = ({ example, currentCode, classNa
         <div className="absolute top-full mt-2 right-0 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
           <div className="p-4">
             <h3 className="font-semibold text-gray-900 mb-3">Share "{example.title}"</h3>
-            
+
             {/* Quick Share Button */}
             <button
               onClick={handleShare}
               disabled={shareStatus === 'sharing'}
-              className="w-full flex items-center justify-center space-x-2 px-4 py-2 mb-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition-colors"
+              className="w-full flex items-center justify-center space-x-2 px-4 py-2 mb-3 text-sm font-medium text-white bg-gray-600 rounded-lg hover:bg-gray-700 disabled:bg-gray-400 transition-colors"
             >
               <Share2 className="w-4 h-4" />
               <span>
                 {shareStatus === 'sharing' ? 'Sharing...' :
-                 shareStatus === 'shared' ? 'Shared!' :
-                 shareStatus === 'error' ? 'Error' :
-                 'Quick Share'}
+                  shareStatus === 'shared' ? 'Shared!' :
+                    shareStatus === 'error' ? 'Error' :
+                      'Quick Share'}
               </span>
             </button>
 

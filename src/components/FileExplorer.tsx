@@ -70,16 +70,16 @@ const FileItemComponent: React.FC<FileItemProps> = ({
     switch (ext) {
       case 'js':
       case 'jsx':
-        return <FileText className="w-4 h-4 text-yellow-600" />;
+        return <FileText className="w-4 h-4 text-gray-500" />;
       case 'ts':
       case 'tsx':
-        return <FileText className="w-4 h-4 text-blue-600" />;
+        return <FileText className="w-4 h-4 text-gray-500" />;
       case 'css':
-        return <FileText className="w-4 h-4 text-blue-500" />;
+        return <FileText className="w-4 h-4 text-gray-500" />;
       case 'html':
-        return <FileText className="w-4 h-4 text-orange-600" />;
+        return <FileText className="w-4 h-4 text-gray-500" />;
       case 'json':
-        return <FileText className="w-4 h-4 text-green-600" />;
+        return <FileText className="w-4 h-4 text-gray-500" />;
       default:
         return <File className="w-4 h-4 text-gray-500" />;
     }
@@ -88,8 +88,7 @@ const FileItemComponent: React.FC<FileItemProps> = ({
   return (
     <div>
       <div
-        className={`flex items-center px-2 py-1 hover:bg-gray-100 cursor-pointer group relative ${activeFileId === item.id ? 'bg-blue-50 border-r-2 border-blue-500' : ''
-          }`}
+        className={`flex items-center px-2 py-1 hover:bg-gray-100 cursor-pointer group relative ${activeFileId === item.id ? 'bg-gray-100 border-r-2 border-gray-400' : ''}`}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
         onClick={() => {
           if (item.type === 'folder') {
@@ -116,9 +115,9 @@ const FileItemComponent: React.FC<FileItemProps> = ({
         <div className="mr-2">
           {item.type === 'folder' ? (
             item.isOpen ? (
-              <FolderOpen className="w-4 h-4 text-blue-500" />
+              <FolderOpen className="w-4 h-4 text-gray-500" />
             ) : (
-              <Folder className="w-4 h-4 text-blue-500" />
+              <Folder className="w-4 h-4 text-gray-500" />
             )
           ) : (
             getFileIcon(item.name)
@@ -132,7 +131,7 @@ const FileItemComponent: React.FC<FileItemProps> = ({
             onChange={(e) => setNewName(e.target.value)}
             onBlur={handleRename}
             onKeyDown={handleKeyPress}
-            className="flex-1 px-1 py-0 text-sm border border-blue-300 rounded"
+            className="flex-1 px-1 py-0 text-sm border border-gray-400 rounded"
             autoFocus
           />
         ) : (
