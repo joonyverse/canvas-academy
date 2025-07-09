@@ -30,7 +30,7 @@ function App() {
   const currentCode = activeFile?.content || '';
 
   // Initialize hooks
-  const panelState = usePanelState('examples');
+  const panelState = usePanelState('projects');
   const exampleState = useExampleState({
     currentCode,
     updateFileContent,
@@ -82,7 +82,6 @@ function App() {
             <Header
               selectedExample={exampleState.selectedExample}
               currentCode={currentCode}
-              onProjectLoad={handleProjectLoad}
             />
 
             <Layout

@@ -2,18 +2,14 @@ import React from 'react';
 import { Code, BookOpen, Github } from 'lucide-react';
 import ShareButton from './ShareButton';
 import AuthButton from './AuthButton';
-import ProjectSaveButton from './ProjectSaveButton';
-import DashboardButton from './DashboardButton';
 import { Example } from '../types';
-import { type Project } from '../lib/database';
 
 interface HeaderProps {
   selectedExample?: Example | null;
   currentCode?: string;
-  onProjectLoad?: (project: Project) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ selectedExample, currentCode, onProjectLoad }) => {
+const Header: React.FC<HeaderProps> = ({ selectedExample, currentCode }) => {
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
@@ -28,8 +24,6 @@ const Header: React.FC<HeaderProps> = ({ selectedExample, currentCode, onProject
         </div>
         
         <div className="flex items-center space-x-4">
-          <DashboardButton onProjectLoad={onProjectLoad} />
-          <ProjectSaveButton currentCode={currentCode || ''} />
           {selectedExample && (
             <ShareButton 
               example={selectedExample} 

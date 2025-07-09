@@ -131,6 +131,7 @@ const Layout: React.FC<LayoutProps> = ({
               <div className={`h-full ${activePanel === null ? 'opacity-0' : 'opacity-100'}`}>
                 <VscodeProjects
                   onProjectLoad={onProjectLoad}
+                  currentCode={currentCode}
                 />
               </div>
             </Panel>

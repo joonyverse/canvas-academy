@@ -14,17 +14,6 @@ const ActivityBar: React.FC<ActivityBarProps> = ({
     <div className="w-12 bg-gray-800 border-r border-gray-600 flex flex-col">
 
       <button
-        onClick={() => onPanelToggle('explorer')}
-        className={`w-full h-12 flex items-center justify-center transition-colors ${activePanel === 'explorer'
-            ? 'bg-gray-700 text-white border-r-2 border-blue-500'
-            : 'text-gray-400 hover:text-white hover:bg-gray-700'
-          }`}
-        title="Explorer"
-      >
-        {activePanel === 'explorer' ? <FolderOpen size={20} /> : <Folder size={20} />}
-      </button>
-      
-      <button
         onClick={() => onPanelToggle('projects')}
         className={`w-full h-12 flex items-center justify-center transition-colors ${activePanel === 'projects'
             ? 'bg-gray-700 text-white border-r-2 border-blue-500'
@@ -33,6 +22,17 @@ const ActivityBar: React.FC<ActivityBarProps> = ({
         title="Projects"
       >
         {activePanel === 'projects' ? <Files size={20} /> : <FileText size={20} />}
+      </button>
+
+      <button
+        onClick={() => onPanelToggle('explorer')}
+        className={`w-full h-12 flex items-center justify-center transition-colors ${activePanel === 'explorer'
+            ? 'bg-gray-700 text-white border-r-2 border-blue-500'
+            : 'text-gray-400 hover:text-white hover:bg-gray-700'
+          }`}
+        title="Explorer"
+      >
+        {activePanel === 'explorer' ? <FolderOpen size={20} /> : <Folder size={20} />}
       </button>
 
       <button

@@ -9,9 +9,19 @@ import {
   FileText,
   ChevronRight,
   ChevronDown,
-  Code
+  Code,
+  Copy,
+  Cut,
+  Clipboard,
+  Download,
+  Upload,
+  FilePlus,
+  FolderPlus,
+  Search,
+  RotateCcw
 } from 'lucide-react'
 import { useProject } from '../contexts/ProjectContext'
+import { useAuth } from '../contexts/AuthContext'
 import { createProjectFile, updateProjectFile, deleteProjectFile as deleteProjectFileApi, updateProject } from '../lib/database'
 import { type ProjectFile } from '../lib/database'
 
@@ -52,6 +62,7 @@ const FileItemComponent: React.FC<FileItemProps> = ({
   onCreateChild,
   onMove
 }) => {
+  const { user } = useAuth()
   const [isRenaming, setIsRenaming] = useState(false)
   const [newName, setNewName] = useState(item.name)
   const [showContextMenu, setShowContextMenu] = useState(false)
@@ -192,19 +203,9 @@ const FileItemComponent: React.FC<FileItemProps> = ({
 
         {/* Context Menu */}
         {showContextMenu && (
-          <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-600 rounded-md shadow-lg z-10 min-w-32">
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                setIsRenaming(true)
-                setShowContextMenu(false)
-              }}
-              className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-gray-200 flex items-center space-x-2"
-            >
-              <Edit3 className="w-3 h-3" />
-              <span>Rename</span>
-            </button>
-            {item.type === 'folder' && (
+          <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-600 rounded-md shadow-lg z-10 min-w-48">
+            {/* File/Folder operations */}
+            {item.type === 'folder' && user && (
               <>
                 <button
                   onClick={(e) => {
@@ -214,7 +215,7 @@ const FileItemComponent: React.FC<FileItemProps> = ({
                   }}
                   className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-gray-200 flex items-center space-x-2"
                 >
-                  <File className="w-3 h-3" />
+                  <FilePlus className="w-3 h-3" />
                   <span>New File</span>
                 </button>
                 <button
@@ -225,22 +226,128 @@ const FileItemComponent: React.FC<FileItemProps> = ({
                   }}
                   className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-gray-200 flex items-center space-x-2"
                 >
-                  <Folder className="w-3 h-3" />
+                  <FolderPlus className="w-3 h-3" />
                   <span>New Folder</span>
                 </button>
+                <div className="border-t border-gray-600 my-1" />
               </>
             )}
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onDelete(item.id)
-                setShowContextMenu(false)
-              }}
-              className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-red-400 flex items-center space-x-2"
-            >
-              <Trash2 className="w-3 h-3" />
-              <span>Delete</span>
-            </button>
+            
+            {/* Cut/Copy operations (only for logged in users) */}
+            {user ? (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    // TODO: Implement cut functionality
+                    setShowContextMenu(false)
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-gray-200 flex items-center space-x-2"
+                >
+                  <Cut className="w-3 h-3" />
+                  <span>Cut</span>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    // TODO: Implement copy functionality
+                    setShowContextMenu(false)
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-gray-200 flex items-center space-x-2"
+                >
+                  <Copy className="w-3 h-3" />
+                  <span>Copy</span>
+                </button>
+                <div className="border-t border-gray-600 my-1" />
+              </>
+            ) : (
+              <>
+                <button
+                  disabled
+                  className="w-full px-3 py-2 text-left text-sm text-gray-500 cursor-not-allowed flex items-center space-x-2"
+                >
+                  <Cut className="w-3 h-3" />
+                  <span>Cut</span>
+                </button>
+                <button
+                  disabled
+                  className="w-full px-3 py-2 text-left text-sm text-gray-500 cursor-not-allowed flex items-center space-x-2"
+                >
+                  <Copy className="w-3 h-3" />
+                  <span>Copy</span>
+                </button>
+                <div className="border-t border-gray-600 my-1" />
+              </>
+            )}
+
+            {/* Download file */}
+            {item.type === 'file' && item.content && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  const blob = new Blob([item.content || ''], { type: 'text/plain' })
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = item.name
+                  a.click()
+                  URL.revokeObjectURL(url)
+                  setShowContextMenu(false)
+                }}
+                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-gray-200 flex items-center space-x-2"
+              >
+                <Download className="w-3 h-3" />
+                <span>Download</span>
+              </button>
+            )}
+
+            {/* Rename (only for logged in users) */}
+            {user ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setIsRenaming(true)
+                  setShowContextMenu(false)
+                }}
+                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-gray-200 flex items-center space-x-2"
+              >
+                <Edit3 className="w-3 h-3" />
+                <span>Rename</span>
+              </button>
+            ) : (
+              <button
+                disabled
+                className="w-full px-3 py-2 text-left text-sm text-gray-500 cursor-not-allowed flex items-center space-x-2"
+              >
+                <Edit3 className="w-3 h-3" />
+                <span>Rename</span>
+              </button>
+            )}
+
+            <div className="border-t border-gray-600 my-1" />
+
+            {/* Delete (only for logged in users) */}
+            {user ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete(item.id)
+                  setShowContextMenu(false)
+                }}
+                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-700 text-red-400 flex items-center space-x-2"
+              >
+                <Trash2 className="w-3 h-3" />
+                <span>Delete</span>
+              </button>
+            ) : (
+              <button
+                disabled
+                className="w-full px-3 py-2 text-left text-sm text-gray-500 cursor-not-allowed flex items-center space-x-2"
+              >
+                <Trash2 className="w-3 h-3" />
+                <span>Delete</span>
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -318,6 +425,7 @@ const FileItemComponent: React.FC<FileItemProps> = ({
 }
 
 const VscodeExplorer: React.FC<VscodeExplorerProps> = ({ onCodeChange }) => {
+  const { user } = useAuth()
   const { activeProject, projectFiles, activeFileId, setActiveFileId, updateProjectFile, addProjectFile, deleteProjectFile } = useProject()
   const [isExpanded, setIsExpanded] = useState(true)
   const [showCreateMenu, setShowCreateMenu] = useState(false)
@@ -453,6 +561,9 @@ const VscodeExplorer: React.FC<VscodeExplorerProps> = ({ onCodeChange }) => {
           <div className="text-center">
             <Code className="w-8 h-8 text-gray-500 mx-auto mb-2" />
             <p className="text-sm text-gray-400">No project selected</p>
+            {!user && (
+              <p className="text-xs text-gray-500 mt-1">Sign in to create and manage projects</p>
+            )}
           </div>
         </div>
       </div>
@@ -489,13 +600,15 @@ const VscodeExplorer: React.FC<VscodeExplorerProps> = ({ onCodeChange }) => {
                   <span>{activeProject.title}</span>
                 </button>
                 <div className="relative">
-                  <button
-                    onClick={() => setShowCreateMenu(true)}
-                    className="p-1 hover:bg-gray-700 rounded opacity-0 group-hover:opacity-100"
-                    title="New File/Folder"
-                  >
-                    <Plus className="w-3 h-3 text-gray-400" />
-                  </button>
+                  {user && (
+                    <button
+                      onClick={() => setShowCreateMenu(true)}
+                      className="p-1 hover:bg-gray-700 rounded opacity-0 group-hover:opacity-100"
+                      title="New File/Folder"
+                    >
+                      <Plus className="w-3 h-3 text-gray-400" />
+                    </button>
+                  )}
 
                   {showCreateMenu && (
                     <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-600 rounded-md shadow-lg z-10 min-w-32">
