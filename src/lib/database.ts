@@ -141,6 +141,23 @@ export const getProjectFiles = async (projectId: string) => {
 }
 
 export const createProjectFile = async (file: Omit<ProjectFileInsert, 'id' | 'created_at' | 'updated_at'>) => {
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) throw new Error('User not authenticated')
+
+  // Check if the project belongs to the current user
+  const { data: project, error: projectError } = await supabase
+    .from('projects')
+    .select('user_id')
+    .eq('id', file.project_id)
+    .single()
+
+  if (projectError) throw projectError
+
+  if (project.user_id !== user.id) {
+    throw new Error('Unauthorized: You can only create files in your own projects')
+  }
+
   const { data, error } = await supabase
     .from('project_files')
     .insert([file])
@@ -152,18 +169,47 @@ export const createProjectFile = async (file: Omit<ProjectFileInsert, 'id' | 'cr
 }
 
 export const updateProjectFile = async (fileId: string, updates: ProjectFileUpdate) => {
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) throw new Error('User not authenticated')
+
+  // Use a more direct approach with RLS policies
   const { data, error } = await supabase
     .from('project_files')
     .update(updates)
     .eq('id', fileId)
     .select()
-    .single()
 
   if (error) throw error
-  return data
+  
+  // Check if update was successful (no rows means no permission or non-existent)
+  if (!data || data.length === 0) {
+    throw new Error('Failed to update file: No permission or file not found')
+  }
+  
+  return data[0]
 }
 
 export const deleteProjectFile = async (fileId: string) => {
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) throw new Error('User not authenticated')
+
+  // First, check if the file belongs to a project owned by the current user
+  const { data: fileData, error: fileError } = await supabase
+    .from('project_files')
+    .select('project_id, projects!inner(user_id)')
+    .eq('id', fileId)
+    .single()
+
+  if (fileError) throw fileError
+
+  // Type assertion to access the joined data
+  const projectData = fileData as any
+  if (projectData.projects.user_id !== user.id) {
+    throw new Error('Unauthorized: You can only delete files in your own projects')
+  }
+
   const { error } = await supabase
     .from('project_files')
     .delete()
