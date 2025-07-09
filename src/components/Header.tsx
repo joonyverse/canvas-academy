@@ -2,6 +2,7 @@ import React from 'react';
 import { Code, BookOpen, Github } from 'lucide-react';
 import ShareButton from './ShareButton';
 import AuthButton from './AuthButton';
+import ProjectSaveButton from './ProjectSaveButton';
 import { Example } from '../types';
 
 interface HeaderProps {
@@ -24,6 +25,7 @@ const Header: React.FC<HeaderProps> = ({ selectedExample, currentCode }) => {
         </div>
         
         <div className="flex items-center space-x-4">
+          <ProjectSaveButton currentCode={currentCode || ''} />
           {selectedExample && (
             <ShareButton 
               example={selectedExample} 
