@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { 
-  Folder, 
-  FolderOpen, 
-  File, 
-  Plus, 
-  MoreHorizontal, 
-  Edit3, 
-  Trash2, 
+import {
+  Folder,
+  FolderOpen,
+  File,
+  Plus,
+  MoreHorizontal,
+  Edit3,
+  Trash2,
   FileText,
   ChevronRight,
   ChevronDown
@@ -88,9 +88,8 @@ const FileItemComponent: React.FC<FileItemProps> = ({
   return (
     <div>
       <div
-        className={`flex items-center px-2 py-1 hover:bg-gray-100 cursor-pointer group relative ${
-          activeFileId === item.id ? 'bg-blue-50 border-r-2 border-blue-500' : ''
-        }`}
+        className={`flex items-center px-2 py-1 hover:bg-gray-100 cursor-pointer group relative ${activeFileId === item.id ? 'bg-blue-50 border-r-2 border-blue-500' : ''
+          }`}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
         onClick={() => {
           if (item.type === 'folder') {
@@ -113,7 +112,7 @@ const FileItemComponent: React.FC<FileItemProps> = ({
             )}
           </div>
         )}
-        
+
         <div className="mr-2">
           {item.type === 'folder' ? (
             item.isOpen ? (
@@ -271,7 +270,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   const [showCreateMenu, setShowCreateMenu] = useState(false);
 
   return (
-    <div className="w-64 bg-gray-50 border-r border-gray-200 h-full flex flex-col">
+    <div className="bg-gray-50 border-r border-gray-200 h-full flex flex-col">
       <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-white">
         <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
           Explorer

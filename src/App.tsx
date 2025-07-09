@@ -1,22 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import Header from './components/Header';
-import Sidebar from './components/Sidebar';
-import FileExplorer from './components/FileExplorer';
-import CodeEditor from './components/CodeEditor';
-import CanvasPreview from './components/CanvasPreview';
+import Layout from './components/Layout';
 import { Example } from './types';
 import { examples } from './data/examples';
 import { useProject } from './hooks/useProject';
 import { useUrlState } from './hooks/useUrlState';
-// TinyURL API를 사용하므로 resolveShortHash 제거
+import { usePanelState } from './hooks/usePanelState';
+import { useExampleState } from './hooks/useExampleState';
 import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
-  const [selectedExample, setSelectedExample] = useState<Example | null>(null);
-  const [isRunning, setIsRunning] = useState(false);
-  const [showFileExplorer, setShowFileExplorer] = useState(true);
   const { getParam, updateUrl } = useUrlState();
-
   const {
     project,
     selectFile,
@@ -30,6 +24,15 @@ function App() {
 
   const activeFile = getActiveFile();
   const currentCode = activeFile?.content || '';
+
+  // Initialize hooks
+  const panelState = usePanelState('examples');
+  const exampleState = useExampleState({
+    currentCode,
+    updateFileContent,
+    activeFileId: activeFile?.id,
+    updateUrl,
+  });
 
   // Load example based on URL parameters or default to first example
   useEffect(() => {
@@ -47,37 +50,12 @@ function App() {
     }
 
     if (exampleToLoad) {
-      setSelectedExample(exampleToLoad);
+      exampleState.setSelectedExample(exampleToLoad);
       if (activeFile) {
         updateFileContent(activeFile.id, exampleToLoad.code);
-        setIsRunning(false);
       }
     }
-  }, [activeFile?.id, getParam, updateFileContent]);
-
-  const handleExampleSelect = (example: Example) => {
-    // Check if there are unsaved changes
-    if (activeFile && currentCode !== selectedExample?.code) {
-      const hasUnsavedChanges = currentCode !== (selectedExample?.code || '');
-      if (hasUnsavedChanges) {
-        const confirmChange = window.confirm(
-          'You have unsaved changes. Loading a new example will discard your current work. Do you want to continue?'
-        );
-        if (!confirmChange) {
-          return; // Don't change example if user cancels
-        }
-      }
-    }
-
-    // Update URL with selected example
-    updateUrl({ example: example.id });
-
-    setSelectedExample(example);
-    if (activeFile) {
-      updateFileContent(activeFile.id, example.code);
-      setIsRunning(false);
-    }
-  };
+  }, [activeFile?.id, getParam, updateFileContent, exampleState.setSelectedExample]);
 
   const handleCodeChange = (newCode: string) => {
     if (activeFile) {
@@ -85,84 +63,42 @@ function App() {
     }
   };
 
-  const handleRun = () => {
-    setIsRunning(true);
-  };
-
-  const handleStop = () => {
-    setIsRunning(false);
-  };
-
-  const handleReset = () => {
-    if (selectedExample && activeFile) {
-      updateFileContent(activeFile.id, selectedExample.code);
-      setIsRunning(false);
-    }
-  };
-
   return (
-    <ErrorBoundary >
+    <ErrorBoundary>
       <div className="h-screen flex flex-col bg-gray-100">
         <Header
-          showFileExplorer={showFileExplorer}
-          onToggleFileExplorer={() => setShowFileExplorer(!showFileExplorer)}
-          selectedExample={selectedExample}
+          selectedExample={exampleState.selectedExample}
           currentCode={currentCode}
         />
 
-        <div className="flex-1 flex overflow-hidden">
-          <Sidebar
-            selectedExample={selectedExample}
-            onExampleSelect={handleExampleSelect}
-          />
+        <Layout
+          panelState={panelState}
+          exampleState={exampleState}
+          project={project}
+          currentCode={currentCode}
+          onFileSelect={selectFile}
+          onFileCreate={(name, type, parentId) => createFile(name, type, parentId)}
+          onFileRename={renameFile}
+          onFileDelete={deleteFile}
+          onFolderToggle={toggleFolder}
+          onCodeChange={handleCodeChange}
+        />
 
-          {showFileExplorer && (
-            <FileExplorer
-              project={project}
-              onFileSelect={selectFile}
-              onFileCreate={createFile}
-              onFileRename={renameFile}
-              onFileDelete={deleteFile}
-              onFolderToggle={toggleFolder}
-            />
-          )}
-
-          <div className="flex-1 flex">
-            <div className="flex-1 bg-white border-r border-gray-200">
-              <CodeEditor
-                code={currentCode}
-                onChange={handleCodeChange}
-                onRun={handleRun}
-                onReset={handleReset}
-              />
-            </div>
-
-            <div className="flex-1 bg-white">
-              <CanvasPreview
-                code={currentCode}
-                isRunning={isRunning}
-                onRun={handleRun}
-                onStop={handleStop}
-              />
-            </div>
-          </div>
-        </div>
-
-        {selectedExample && (
+        {exampleState.selectedExample && (
           <div className="bg-white border-t border-gray-200 p-4">
             <div className="flex items-center space-x-4">
               <div className="flex-1">
-                <h3 className="font-semibold text-gray-900">{selectedExample.title}</h3>
-                <p className="text-sm text-gray-600">{selectedExample.description}</p>
+                <h3 className="font-semibold text-gray-900">{exampleState.selectedExample.title}</h3>
+                <p className="text-sm text-gray-600">{exampleState.selectedExample.description}</p>
               </div>
               <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-500">Difficulty:</span>
-                  <span className={`px-2 py-1 text-xs font-medium rounded ${selectedExample.difficulty === 'beginner' ? 'bg-green-100 text-green-800' :
-                    selectedExample.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
+                  <span className={`px-2 py-1 text-xs font-medium rounded ${exampleState.selectedExample.difficulty === 'beginner' ? 'bg-green-100 text-green-800' :
+                      exampleState.selectedExample.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
                     }`}>
-                    {selectedExample.difficulty}
+                    {exampleState.selectedExample.difficulty}
                   </span>
                 </div>
               </div>

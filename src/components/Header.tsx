@@ -1,29 +1,18 @@
 import React from 'react';
-import { Code, BookOpen, Github, Sidebar } from 'lucide-react';
+import { Code, BookOpen, Github } from 'lucide-react';
 import ShareButton from './ShareButton';
 import { Example } from '../types';
 
 interface HeaderProps {
-  showFileExplorer: boolean;
-  onToggleFileExplorer: () => void;
   selectedExample?: Example | null;
   currentCode?: string;
 }
 
-const Header: React.FC<HeaderProps> = ({ showFileExplorer, onToggleFileExplorer, selectedExample, currentCode }) => {
+const Header: React.FC<HeaderProps> = ({ selectedExample, currentCode }) => {
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <button
-            onClick={onToggleFileExplorer}
-            className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
-              showFileExplorer ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-            title="Toggle File Explorer"
-          >
-            <Sidebar className="w-4 h-4" />
-          </button>
           <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-lg">
             <Code className="w-5 h-5 text-white" />
           </div>

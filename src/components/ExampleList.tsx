@@ -3,7 +3,7 @@ import { ChevronRight, Play, Square, MousePointer, Sparkles, Gamepad2 } from 'lu
 import { categories, examples } from '../data/examples';
 import { Example } from '../types';
 
-interface SidebarProps {
+interface ExampleListProps {
   selectedExample: Example | null;
   onExampleSelect: (example: Example) => void;
 }
@@ -22,22 +22,22 @@ const difficultyColors = {
   advanced: 'bg-red-100 text-red-800'
 };
 
-const Sidebar: React.FC<SidebarProps> = ({ selectedExample, onExampleSelect }) => {
+const ExampleList: React.FC<ExampleListProps> = ({ selectedExample, onExampleSelect }) => {
   const [expandedCategory, setExpandedCategory] = React.useState<string>('basics');
 
   return (
-    <div className="w-80 bg-gray-50 border-r border-gray-200 h-full overflow-y-auto">
+    <div className="bg-gray-50 border-r border-gray-200 h-full overflow-y-auto">
       <div className="p-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900">Examples</h2>
         <p className="text-sm text-gray-600 mt-1">Choose an example to get started</p>
       </div>
-      
+
       <div className="p-4 space-y-4">
         {categories.map(category => {
           const Icon = iconMap[category.icon as keyof typeof iconMap];
           const categoryExamples = examples.filter(ex => ex.category === category.id);
           const isExpanded = expandedCategory === category.id;
-          
+
           return (
             <div key={category.id} className="space-y-2">
               <button
@@ -52,23 +52,21 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedExample, onExampleSelect }) =
                   </div>
                 </div>
                 <ChevronRight
-                  className={`w-4 h-4 text-gray-400 transition-transform ${
-                    isExpanded ? 'rotate-90' : ''
-                  }`}
+                  className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''
+                    }`}
                 />
               </button>
-              
+
               {isExpanded && (
                 <div className="ml-4 space-y-2">
                   {categoryExamples.map(example => (
                     <button
                       key={example.id}
                       onClick={() => onExampleSelect(example)}
-                      className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                        selectedExample?.id === example.id
-                          ? 'bg-blue-50 border-blue-200'
-                          : 'bg-white border-gray-200 hover:bg-gray-50'
-                      }`}
+                      className={`w-full text-left p-3 rounded-lg border transition-colors ${selectedExample?.id === example.id
+                        ? 'bg-blue-50 border-blue-200'
+                        : 'bg-white border-gray-200 hover:bg-gray-50'
+                        }`}
                     >
                       <div className="flex items-center justify-between mb-1">
                         <h4 className="font-medium text-gray-900">{example.title}</h4>
@@ -89,4 +87,4 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedExample, onExampleSelect }) =
   );
 };
 
-export default Sidebar;
+export default ExampleList;
