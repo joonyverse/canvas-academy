@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Share2, Copy, Check, ExternalLink, Loader } from 'lucide-react';
 import { Example } from '../types';
 import { shareExample, copyToClipboard, createShortLinkWithFallback, createShareableUrl } from '../utils/shortLink';
@@ -15,6 +15,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({ example, currentCode, classNa
   const [shareStatus, setShareStatus] = useState<'idle' | 'sharing' | 'shared' | 'error'>('idle');
   const [shortLink, setShortLink] = useState<string>('');
   const [isLoadingShortLink, setIsLoadingShortLink] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleShare = async () => {
     setShareStatus('sharing');
@@ -60,27 +61,8 @@ const ShareButton: React.FC<ShareButtonProps> = ({ example, currentCode, classNa
     }
   };
 
-  const handleCopyFullUrl = async () => {
-    const fullUrl = createShareableUrl(example.id);
-    
-    try {
-      const success = await copyToClipboard(fullUrl);
-      if (success) {
-        setCopyStatus('copied');
-        setTimeout(() => setCopyStatus('idle'), 2000);
-      } else {
-        setCopyStatus('error');
-        setTimeout(() => setCopyStatus('idle'), 2000);
-      }
-    } catch (error) {
-      setCopyStatus('error');
-      setTimeout(() => setCopyStatus('idle'), 2000);
-    }
-  };
-
   const fullUrl = createShareableUrl(example.id);
   
-  // Generate short link when component mounts or example changes
   const generateShortLink = async () => {
     setIsLoadingShortLink(true);
     try {
@@ -100,11 +82,28 @@ const ShareButton: React.FC<ShareButtonProps> = ({ example, currentCode, classNa
     }
   }, [showShareMenu, example.id]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowShareMenu(false);
+      }
+    };
+
+    if (showShareMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showShareMenu]);
+
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative ${className}`} ref={dropdownRef}>
       <button
         onClick={() => setShowShareMenu(!showShareMenu)}
-        className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+        className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
         title="Share this example"
       >
         <Share2 className="w-4 h-4" />
@@ -155,11 +154,11 @@ const ShareButton: React.FC<ShareButtonProps> = ({ example, currentCode, classNa
                   ) : (
                     <Copy className="w-4 h-4" />
                   )}
+                  <span>
+                    {copyStatus === 'copied' ? 'Copied!' : 'Copy'}
+                  </span>
                 </button>
               </div>
-              {shortLink && shortLink !== fullUrl && (
-                <p className="text-xs text-green-600 mt-1">✓ TinyURL generated successfully</p>
-              )}
             </div>
 
             {/* Full URL */}
@@ -172,47 +171,28 @@ const ShareButton: React.FC<ShareButtonProps> = ({ example, currentCode, classNa
                   type="text"
                   value={fullUrl}
                   readOnly
-                  className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md bg-gray-50 text-gray-600 text-xs"
+                  className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md bg-gray-50 text-gray-600"
                 />
                 <button
-                  onClick={handleCopyFullUrl}
+                  onClick={() => copyToClipboard(fullUrl)}
                   className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                 >
-                  {copyStatus === 'copied' ? (
-                    <Check className="w-4 h-4 text-green-600" />
-                  ) : (
-                    <Copy className="w-4 h-4" />
-                  )}
+                  <Copy className="w-4 h-4" />
+                  <span>Copy</span>
                 </button>
               </div>
             </div>
 
-            {/* Copy Status */}
-            {copyStatus === 'copied' && (
-              <p className="text-sm text-green-600 mb-2">✓ Copied to clipboard!</p>
-            )}
-            {copyStatus === 'error' && (
-              <p className="text-sm text-red-600 mb-2">✗ Failed to copy</p>
-            )}
-
-            {/* Open in new tab */}
+            {/* Open in New Tab */}
             <button
-              onClick={() => window.open(fullUrl, '_blank')}
+              onClick={() => window.open(shortLink || fullUrl, '_blank')}
               className="w-full flex items-center justify-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             >
               <ExternalLink className="w-4 h-4" />
-              <span>Open in new tab</span>
+              <span>Open in New Tab</span>
             </button>
           </div>
         </div>
-      )}
-
-      {/* Close menu when clicking outside */}
-      {showShareMenu && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setShowShareMenu(false)}
-        />
       )}
     </div>
   );

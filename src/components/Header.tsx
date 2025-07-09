@@ -1,12 +1,16 @@
 import React from 'react';
 import { Code, BookOpen, Github, Sidebar } from 'lucide-react';
+import ShareButton from './ShareButton';
+import { Example } from '../types';
 
 interface HeaderProps {
   showFileExplorer: boolean;
   onToggleFileExplorer: () => void;
+  selectedExample?: Example | null;
+  currentCode?: string;
 }
 
-const Header: React.FC<HeaderProps> = ({ showFileExplorer, onToggleFileExplorer }) => {
+const Header: React.FC<HeaderProps> = ({ showFileExplorer, onToggleFileExplorer, selectedExample, currentCode }) => {
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
@@ -30,6 +34,12 @@ const Header: React.FC<HeaderProps> = ({ showFileExplorer, onToggleFileExplorer 
         </div>
         
         <div className="flex items-center space-x-4">
+          {selectedExample && (
+            <ShareButton 
+              example={selectedExample} 
+              currentCode={currentCode || ''}
+            />
+          )}
           <button className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
             <BookOpen className="w-4 h-4" />
             <span>Documentation</span>

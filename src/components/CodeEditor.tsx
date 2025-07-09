@@ -238,14 +238,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
             <span>Reset</span>
           </button>
           
-          <button
-            onClick={onRun}
-            className="flex items-center space-x-2 px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-            title="Run Code (Ctrl+Enter)"
-          >
-            <Play className="w-4 h-4" />
-            <span>Run Code</span>
-          </button>
         </div>
       </div>
 

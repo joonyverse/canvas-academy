@@ -15,6 +15,17 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
   const [canvasSize, setCanvasSize] = React.useState({ width: 400, height: 300 });
   const [showConsole, setShowConsole] = React.useState(false);
   
+  const onError = React.useCallback((errorMessage: string) => {
+    setError(errorMessage);
+  }, []);
+
+  const onConsole = React.useCallback((level: string, args: any[]) => {
+    const consoleMethod = console[level as keyof Console] as Function;
+    if (consoleMethod) {
+      consoleMethod.apply(console, args);
+    }
+  }, []);
+
   const {
     initializeCanvas,
     executeCode,
@@ -23,15 +34,8 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
     isExecuting,
     logs
   } = useSecureCanvasExecutor({
-    onError: (errorMessage) => {
-      setError(errorMessage);
-    },
-    onConsole: (level, args) => {
-      const consoleMethod = console[level as keyof Console] as Function;
-      if (consoleMethod) {
-        consoleMethod.apply(console, args);
-      }
-    },
+    onError,
+    onConsole,
     maxExecutionTime: 10000 // 10 seconds
   });
 
@@ -82,8 +86,21 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
     stopExecution();
   };
 
+  const clearCanvas = React.useCallback(() => {
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      }
+    }
+    stopExecution();
+    setError(null);
+  }, [stopExecution]);
+
   const executeUserCode = React.useCallback(async () => {
-    if (!canvasRef.current || !isReady) return;
+    if (!canvasRef.current || !isReady) {
+      return;
+    }
 
     setError(null);
 
@@ -99,11 +116,21 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
     }
   }, [code, executeCode, isReady]);
 
+  // Use ref to store the latest executeUserCode function
+  const executeUserCodeRef = React.useRef(executeUserCode);
+  executeUserCodeRef.current = executeUserCode;
+
   useEffect(() => {
     if (isRunning) {
-      executeUserCode();
+      executeUserCodeRef.current();
     }
-  }, [isRunning]); // Remove executeUserCode from dependency array to prevent re-execution
+  }, [isRunning]); // Only depend on isRunning
+
+  // Clear canvas when code changes (example switch)
+  useEffect(() => {
+    clearCanvas();
+  }, [code, clearCanvas]);
+
 
   // Initialize canvas when component mounts
   useEffect(() => {

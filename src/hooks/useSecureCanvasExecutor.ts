@@ -14,8 +14,9 @@ export interface UseSecureCanvasExecutorOptions {
 
 export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions = {}) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const executionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const executionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const activeAnimationFrames = useRef<Set<number>>(new Set());
   const [isReady, setIsReady] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
   const [logs, setLogs] = useState<Array<{ level: string; args: any[] }>>([]);
@@ -51,10 +52,15 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
         return;
       }
 
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       try {
+        // Clear canvas before execution
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Clear all previous animation frames before starting new execution
+        activeAnimationFrames.current.forEach(id => {
+          cancelAnimationFrame(id);
+        });
+        activeAnimationFrames.current.clear();
         // Create secure execution environment
         const capturedLogs: Array<{ level: string; args: any[] }> = [];
         
@@ -108,11 +114,13 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
                 onError?.(`Animation frame callback error: ${error instanceof Error ? error.message : 'Unknown error'}`);
               }
             });
+            activeAnimationFrames.current.add(id);
             animationFrameRef.current = id;
             return id;
           },
           cancelAnimationFrame: (id: number) => {
             cancelAnimationFrame(id);
+            activeAnimationFrames.current.delete(id);
             if (animationFrameRef.current === id) {
               animationFrameRef.current = null;
             }
@@ -176,10 +184,12 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
       executionTimeoutRef.current = null;
     }
     
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
+    // Cancel all active animation frames
+    activeAnimationFrames.current.forEach(id => {
+      cancelAnimationFrame(id);
+    });
+    activeAnimationFrames.current.clear();
+    animationFrameRef.current = null;
     
     setIsExecuting(false);
   }, []);
@@ -197,9 +207,11 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
       if (executionTimeoutRef.current) {
         clearTimeout(executionTimeoutRef.current);
       }
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
+      // Cancel all active animation frames
+      activeAnimationFrames.current.forEach(id => {
+        cancelAnimationFrame(id);
+      });
+      activeAnimationFrames.current.clear();
     };
   }, []);
 
@@ -208,7 +220,7 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
     executeCode,
     stopExecution,
     resizeCanvas,
-    isReady: true, // Always ready since we're not using web workers
+    isReady, // Use actual state
     isExecuting,
     logs
   };

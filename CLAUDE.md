@@ -56,3 +56,7 @@ Examples are structured in `examples.ts` with:
 - The Monaco editor has Canvas API type definitions for autocompletion
 - Animation frame management is handled automatically by the preview component
 - All code execution happens client-side in a sandboxed environment
+
+## Git Workflow
+
+- Always commit after finishing todo item

@@ -4,7 +4,6 @@ import Sidebar from './components/Sidebar';
 import FileExplorer from './components/FileExplorer';
 import CodeEditor from './components/CodeEditor';
 import CanvasPreview from './components/CanvasPreview';
-import ShareButton from './components/ShareButton';
 import { Example } from './types';
 import { examples } from './data/examples';
 import { useProject } from './hooks/useProject';
@@ -87,7 +86,11 @@ function App() {
   };
 
   const handleRun = () => {
-    setIsRunning(true);
+    setIsRunning(false); // Reset first
+    setTimeout(() => {
+      setIsRunning(true); // Then trigger
+      setTimeout(() => setIsRunning(false), 100); // Reset after execution
+    }, 10);
   };
 
   const handleReset = () => {
@@ -103,6 +106,8 @@ function App() {
         <Header
           showFileExplorer={showFileExplorer}
           onToggleFileExplorer={() => setShowFileExplorer(!showFileExplorer)}
+          selectedExample={selectedExample}
+          currentCode={currentCode}
         />
 
         <div className="flex-1 flex overflow-hidden">
@@ -159,10 +164,6 @@ function App() {
                     {selectedExample.difficulty}
                   </span>
                 </div>
-                <ShareButton 
-                  example={selectedExample} 
-                  currentCode={currentCode}
-                />
               </div>
             </div>
           </div>
