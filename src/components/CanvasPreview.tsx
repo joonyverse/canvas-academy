@@ -14,7 +14,7 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
   const [error, setError] = React.useState<string | null>(null);
   const [canvasSize, setCanvasSize] = React.useState({ width: 400, height: 300 });
   const [showConsole, setShowConsole] = React.useState(false);
-  
+
   const onError = React.useCallback((errorMessage: string) => {
     setError(errorMessage);
   }, []);
@@ -42,14 +42,14 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
   // Update canvas size based on container (stable reference)
   const updateCanvasSize = React.useCallback(() => {
     if (!containerRef.current) return;
-    
+
     const containerRect = containerRef.current.getBoundingClientRect();
     const padding = 48; // Total padding (24px on each side)
     const bottomSpace = 40; // Space for dimension text
-    
+
     const newWidth = Math.max(400, Math.floor(containerRect.width - padding));
     const newHeight = Math.max(300, Math.floor(containerRect.height - padding - bottomSpace));
-    
+
     // Only update state if size actually changed
     setCanvasSize(prev => {
       if (prev.width !== newWidth || prev.height !== newHeight) {
@@ -63,7 +63,7 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
   // Set up resize observer with debouncing
   useEffect(() => {
     if (!containerRef.current) return;
-    
+
     let resizeTimeout: number;
     const resizeObserver = new ResizeObserver(() => {
       // Debounce resize events to prevent continuous triggering
@@ -72,10 +72,10 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
         updateCanvasSize();
       }, 100); // Wait 100ms after resize stops
     });
-    
+
     resizeObserver.observe(containerRef.current);
     updateCanvasSize(); // Initial size
-    
+
     return () => {
       clearTimeout(resizeTimeout);
       resizeObserver.disconnect();
@@ -106,11 +106,11 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
 
     try {
       const result = await executeCode(code);
-      
+
       if (!result.success && result.error) {
         setError(result.error);
       }
-      
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
     }
@@ -144,7 +144,7 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
     if (canvasRef.current && isReady) {
       const prevWidth = canvasRef.current.width;
       const prevHeight = canvasRef.current.height;
-      
+
       // Only update if size actually changed
       if (prevWidth !== canvasSize.width || prevHeight !== canvasSize.height) {
         canvasRef.current.width = canvasSize.width;
@@ -170,35 +170,25 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
       <div className="flex items-center justify-between p-4 bg-gray-100 border-b border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900">Canvas Preview</h3>
         <div className="flex items-center space-x-2">
-          {isExecuting && (
-            <span className="flex items-center space-x-2 text-sm text-green-600">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span>Running</span>
-            </span>
-          )}
-          
-          {logs.length > 0 && (
-            <button
-              onClick={() => setShowConsole(!showConsole)}
-              className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
-              title="Toggle Console"
-            >
-              <Terminal className="w-4 h-4" />
-              <span>Console ({logs.length})</span>
-            </button>
-          )}
-          
+          <button
+            onClick={() => setShowConsole(!showConsole)}
+            className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+            title="Toggle Console"
+          >
+            <Terminal className="w-4 h-4" />
+            <span>Console ({logs.length})</span>
+          </button>
+
           <button
             onClick={handleRun}
-            className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-            title="Run Code (Ctrl+Enter)"
+            className={`flex items-center space-x-2 px-3 py-1.5 text-sm font-medium border ${isRunning ? 'text-red-600 bg-red-100 border-red-200 hover:bg-red-50' : 'text-white bg-blue-600 border-blue-700 hover:bg-blue-700'} rounded-lg transition-colors`}
+            title="Run (Ctrl+Enter)"
           >
-            <RotateCcw className="w-4 h-4" />
-            <span>Run Code</span>
+            <span>{isRunning ? 'Stop' : 'Run'}</span>
           </button>
         </div>
       </div>
-      
+
       {showConsole && logs.length > 0 && (
         <div className="p-4 bg-gray-800 text-white text-sm font-mono max-h-32 overflow-y-auto border-b border-gray-300">
           <div className="flex items-center justify-between mb-2">
@@ -211,33 +201,34 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun })
             </button>
           </div>
           {logs.map((log, index) => (
-            <div key={index} className={`mb-1 ${
-              log.level === 'error' ? 'text-red-400' :
+            <div key={index} className={`mb-1 ${log.level === 'error' ? 'text-red-400' :
               log.level === 'warn' ? 'text-yellow-400' :
-              log.level === 'info' ? 'text-blue-400' :
-              'text-gray-300'
-            }`}>
+                log.level === 'info' ? 'text-blue-400' :
+                  'text-gray-300'
+              }`}>
               <span className="text-gray-500">[{log.level}]</span> {log.args.join(' ')}
             </div>
           ))}
         </div>
       )}
-      
+
       <div className="flex-1 flex items-center justify-center p-3 bg-gray-50">
         <div ref={containerRef} className="w-full h-full flex items-center justify-center">
           {error ? (
-            <div className="flex items-center space-x-3 p-4 bg-red-50 border border-red-200 rounded-lg max-w-md">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
-              <div>
+            <div className="flex items-start space-x-3 p-4 bg-red-50 border border-red-200 rounded-lg max-w-lg">
+              <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
                 <p className="font-medium text-red-800">Execution Error</p>
-                <p className="text-sm text-red-600">{error}</p>
-                <div className="mt-2 p-2 bg-red-100 rounded text-xs text-red-700">
-                  <p className="font-medium mb-1">💡 Security Note:</p>
+                <div className="mt-1 text-sm text-red-600 whitespace-pre-wrap font-mono bg-red-100 p-2 rounded">
+                  {error}
+                </div>
+                <div className="mt-3 p-2 bg-red-100 rounded text-xs text-red-700">
+                  <p className="font-medium mb-1">💡 Debugging Tips:</p>
                   <ul className="list-disc list-inside space-y-1">
-                    <li>Code runs in a secure sandbox environment</li>
-                    <li>Limited execution time (10 seconds max)</li>
-                    <li>No access to external resources</li>
-                    <li>Canvas and context are pre-provided</li>
+                    <li>Check the line number and column for syntax errors</li>
+                    <li>Make sure variables are defined before use</li>
+                    <li>Use console.log() to debug your code</li>
+                    <li>Canvas and context are available as 'canvas' and 'ctx'</li>
                   </ul>
                 </div>
               </div>

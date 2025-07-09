@@ -494,11 +494,12 @@ function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   
   // Draw paddles
-  ctx.fillStyle = '#FFF';
+  ctx.fillStyle = '#000';
   ctx.fillRect(paddle1.x, paddle1.y, paddle1.width, paddle1.height);
   ctx.fillRect(paddle2.x, paddle2.y, paddle2.width, paddle2.height);
   
   // Draw ball
+  ctx.fillStyle = '#000';
   ctx.beginPath();
   ctx.arc(ball.x, ball.y, ball.radius, 0, 2 * Math.PI);
   ctx.fill();
