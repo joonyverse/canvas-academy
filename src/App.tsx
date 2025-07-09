@@ -8,6 +8,7 @@ import { useUrlState } from './hooks/useUrlState';
 import { usePanelState } from './hooks/usePanelState';
 import { useExampleState } from './hooks/useExampleState';
 import ErrorBoundary from './components/ErrorBoundary';
+import { AuthProvider } from './contexts/AuthContext';
 
 function App() {
   const { getParam, updateUrl } = useUrlState();
@@ -64,49 +65,51 @@ function App() {
   };
 
   return (
-    <ErrorBoundary>
-      <div className="h-screen flex flex-col bg-gray-100">
-        <Header
-          selectedExample={exampleState.selectedExample}
-          currentCode={currentCode}
-        />
+    <AuthProvider>
+      <ErrorBoundary>
+        <div className="h-screen flex flex-col bg-gray-100">
+          <Header
+            selectedExample={exampleState.selectedExample}
+            currentCode={currentCode}
+          />
 
-        <Layout
-          panelState={panelState}
-          exampleState={exampleState}
-          project={project}
-          currentCode={currentCode}
-          onFileSelect={selectFile}
-          onFileCreate={(name, type, parentId) => createFile(name, type, parentId)}
-          onFileRename={renameFile}
-          onFileDelete={deleteFile}
-          onFolderToggle={toggleFolder}
-          onCodeChange={handleCodeChange}
-        />
+          <Layout
+            panelState={panelState}
+            exampleState={exampleState}
+            project={project}
+            currentCode={currentCode}
+            onFileSelect={selectFile}
+            onFileCreate={(name, type, parentId) => createFile(name, type, parentId)}
+            onFileRename={renameFile}
+            onFileDelete={deleteFile}
+            onFolderToggle={toggleFolder}
+            onCodeChange={handleCodeChange}
+          />
 
-        {exampleState.selectedExample && (
-          <div className="bg-white border-t border-gray-200 p-4">
-            <div className="flex items-center space-x-4">
-              <div className="flex-1">
-                <h3 className="font-semibold text-gray-900">{exampleState.selectedExample.title}</h3>
-                <p className="text-sm text-gray-600">{exampleState.selectedExample.description}</p>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-500">Difficulty:</span>
-                  <span className={`px-2 py-1 text-xs font-medium rounded ${exampleState.selectedExample.difficulty === 'beginner' ? 'bg-green-100 text-green-800' :
-                      exampleState.selectedExample.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                    }`}>
-                    {exampleState.selectedExample.difficulty}
-                  </span>
+          {exampleState.selectedExample && (
+            <div className="bg-white border-t border-gray-200 p-4">
+              <div className="flex items-center space-x-4">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900">{exampleState.selectedExample.title}</h3>
+                  <p className="text-sm text-gray-600">{exampleState.selectedExample.description}</p>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-500">Difficulty:</span>
+                    <span className={`px-2 py-1 text-xs font-medium rounded ${exampleState.selectedExample.difficulty === 'beginner' ? 'bg-green-100 text-green-800' :
+                        exampleState.selectedExample.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                      }`}>
+                      {exampleState.selectedExample.difficulty}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
-    </ErrorBoundary>
+          )}
+        </div>
+      </ErrorBoundary>
+    </AuthProvider>
   );
 }
 
