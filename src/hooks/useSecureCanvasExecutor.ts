@@ -48,16 +48,38 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
       setLogs([]);
 
       const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-
-      if (!ctx) {
-        resolve({ success: false, error: 'Unable to get canvas context' });
-        return;
+      
+      // Check if code uses Three.js to determine context type
+      const usesThreeJS = code.includes('THREE.') || code.includes('new THREE') || 
+                         code.includes('GLTFLoader') || code.includes('OrbitControls');
+      
+      let ctx: CanvasRenderingContext2D | null = null;
+      
+      if (usesThreeJS) {
+        // For Three.js, create a fresh canvas element to avoid context conflicts
+        const newCanvas = document.createElement('canvas');
+        newCanvas.width = canvas.width;
+        newCanvas.height = canvas.height;
+        newCanvas.style.width = canvas.style.width;
+        newCanvas.style.height = canvas.style.height;
+        
+        // Replace the current canvas with the new one
+        if (canvas.parentNode) {
+          canvas.parentNode.replaceChild(newCanvas, canvas);
+          canvasRef.current = newCanvas;
+        }
+      } else {
+        // For 2D canvas operations, get 2D context
+        ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve({ success: false, error: 'Unable to get 2D canvas context' });
+          return;
+        }
+        // Clear canvas before execution
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
 
       try {
-        // Clear canvas before execution
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         // Clear all previous animation frames before starting new execution
         activeAnimationFrames.current.forEach(id => {
@@ -68,8 +90,8 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
         const capturedLogs: Array<{ level: string; args: unknown[] }> = [];
 
         const safeGlobals = {
-          canvas,
-          ctx,
+          canvas: canvasRef.current, // Use current canvas reference
+          ...(ctx && { ctx }), // Only provide ctx for 2D canvas operations
           Math,
           THREE, // three.js를 전역으로 제공
           GLTFLoader, // GLTFLoader를 별도로 제공

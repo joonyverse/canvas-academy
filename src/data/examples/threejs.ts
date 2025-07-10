@@ -10,8 +10,13 @@ export const threejsExamples: Example[] = [
     code: `// Create scene, camera, and renderer
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, canvas.width / canvas.height, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ canvas: canvas });
+const renderer = new THREE.WebGLRenderer({ 
+  canvas: canvas,
+  antialias: true,
+  alpha: true
+});
 renderer.setSize(canvas.width, canvas.height);
+renderer.setClearColor(0x000000, 1);
 
 // Create a cube
 const geometry = new THREE.BoxGeometry(1, 1, 1);
@@ -45,8 +50,13 @@ animate();`
     code: `// Create scene, camera, and renderer
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, canvas.width / canvas.height, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ canvas: canvas });
+const renderer = new THREE.WebGLRenderer({ 
+  canvas: canvas,
+  antialias: true,
+  alpha: true
+});
 renderer.setSize(canvas.width, canvas.height);
+renderer.setClearColor(0x000000, 1);
 
 // Add lighting
 const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
@@ -103,8 +113,13 @@ animate();`
     code: `// Create scene, camera, and renderer
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, canvas.width / canvas.height, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ canvas: canvas });
+const renderer = new THREE.WebGLRenderer({ 
+  canvas: canvas,
+  antialias: true,
+  alpha: true
+});
 renderer.setSize(canvas.width, canvas.height);
+renderer.setClearColor(0x000000, 1);
 
 // Add orbit controls
 const controls = new OrbitControls(camera, canvas);
@@ -154,8 +169,13 @@ animate();`
     code: `// Create scene, camera, and renderer
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, canvas.width / canvas.height, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ canvas: canvas });
+const renderer = new THREE.WebGLRenderer({ 
+  canvas: canvas,
+  antialias: true,
+  alpha: true
+});
 renderer.setSize(canvas.width, canvas.height);
+renderer.setClearColor(0x000000, 1);
 
 // Create particles
 const particleCount = 1000;
@@ -230,8 +250,13 @@ animate();`
     code: `// Create scene, camera, and renderer
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, canvas.width / canvas.height, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ canvas: canvas });
+const renderer = new THREE.WebGLRenderer({ 
+  canvas: canvas,
+  antialias: true,
+  alpha: true
+});
 renderer.setSize(canvas.width, canvas.height);
+renderer.setClearColor(0x000000, 1);
 
 // Add lighting
 const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
