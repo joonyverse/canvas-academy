@@ -45,6 +45,8 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
         return;
       }
 
+      // Clear any existing execution first
+      stopExecution();
       setLogs([]);
 
       const canvas = canvasRef.current;
@@ -63,6 +65,8 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
         newCanvas.height = canvas.height;
         newCanvas.style.width = canvas.style.width;
         newCanvas.style.height = canvas.style.height;
+        newCanvas.style.display = canvas.style.display;
+        newCanvas.className = canvas.className;
         
         // Replace the current canvas with the new one
         if (canvas.parentNode) {
@@ -70,14 +74,25 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
           canvasRef.current = newCanvas;
         }
       } else {
-        // For 2D canvas operations, get 2D context
+        // For 2D canvas operations, get 2D context and clear thoroughly
         ctx = canvas.getContext('2d');
         if (!ctx) {
           resolve({ success: false, error: 'Unable to get 2D canvas context' });
           return;
         }
-        // Clear canvas before execution
+        
+        // Thorough canvas cleanup
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.reset?.(); // Reset if available (newer browsers)
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = '#000000';
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1;
+        ctx.lineCap = 'butt';
+        ctx.lineJoin = 'miter';
+        ctx.miterLimit = 10;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
       }
 
       try {
@@ -263,6 +278,67 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
       document.removeEventListener(type, listener);
     });
     eventListeners.current = [];
+
+    // Clear canvas if available
+    if (canvasRef.current) {
+      const canvas = canvasRef.current;
+      
+      // Check if it's a 2D context and clear it
+      const ctx2d = canvas.getContext('2d');
+      if (ctx2d) {
+        ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+        ctx2d.reset?.(); // Reset if available
+      }
+      
+      // For WebGL contexts, clear the viewport
+      const webglContext = canvas.getContext('webgl') || canvas.getContext('webgl2');
+      if (webglContext) {
+        webglContext.clear(webglContext.COLOR_BUFFER_BIT | webglContext.DEPTH_BUFFER_BIT);
+      }
+    }
+
+    // Clear all timers and intervals - safer approach
+    try {
+      // Get the highest timer ID and clear from there backwards
+      const highestTimeoutId = setTimeout(() => {}, 0);
+      for (let i = 0; i < highestTimeoutId; i++) {
+        clearTimeout(i);
+      }
+      clearTimeout(highestTimeoutId);
+
+      const highestIntervalId = setInterval(() => {}, 999999);
+      for (let i = 0; i < highestIntervalId; i++) {
+        clearInterval(i);
+      }
+      clearInterval(highestIntervalId);
+    } catch (e) {
+      // Ignore cleanup errors
+    }
+
+    // Clear any global Three.js cleanup if needed
+    if (typeof window !== 'undefined' && (window as any).THREE) {
+      // Force garbage collection of Three.js objects if possible
+      try {
+        // This will help with Three.js memory cleanup
+        if ((window as any).scene) {
+          (window as any).scene = null;
+        }
+        if ((window as any).renderer) {
+          (window as any).renderer = null;
+        }
+        if ((window as any).camera) {
+          (window as any).camera = null;
+        }
+        if ((window as any).mixer) {
+          (window as any).mixer = null;
+        }
+        if ((window as any).controls) {
+          (window as any).controls = null;
+        }
+      } catch (e) {
+        // Ignore cleanup errors
+      }
+    }
   }, []);
 
   const resizeCanvas = useCallback((width: number, height: number) => {

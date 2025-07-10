@@ -130,10 +130,13 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun, o
     }
   }, [isRunning]); // Only depend on isRunning
 
-  // Clear canvas when code changes (example switch)
+  // Clear canvas and stop execution when code changes (example switch)
   useEffect(() => {
+    // Stop any running execution first
+    stopExecution();
+    // Then clear the canvas
     clearCanvas();
-  }, [code, clearCanvas]);
+  }, [code, clearCanvas, stopExecution]);
 
 
   // Initialize canvas when component mounts
