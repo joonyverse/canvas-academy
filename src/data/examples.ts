@@ -43,6 +43,12 @@ export const categories: Category[] = [
     name: 'Physics',
     description: 'Physics simulations and natural phenomena',
     icon: 'Atom'
+  },
+  {
+    id: 'threejs',
+    name: 'Three.js',
+    description: '3D graphics and WebGL with Three.js',
+    icon: 'Box'
   }
 ];
 

@@ -1,5 +1,9 @@
 import { useRef, useCallback, useEffect, useState } from 'react';
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 
 export interface ExecutionResult {
   success: boolean;
@@ -68,6 +72,10 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
           ctx,
           Math,
           THREE, // three.js를 전역으로 제공
+          GLTFLoader, // GLTFLoader를 별도로 제공
+          OrbitControls, // OrbitControls를 별도로 제공
+          FBXLoader, // FBXLoader를 별도로 제공
+          OBJLoader, // OBJLoader를 별도로 제공
           console: {
             log: (...args: unknown[]) => {
               capturedLogs.push({ level: 'log', args });
@@ -248,12 +256,14 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
         clearTimeout(executionTimeoutRef.current);
       }
       // Cancel all active animation frames
-      activeAnimationFrames.current.forEach(id => {
+      const currentFrames = activeAnimationFrames.current;
+      currentFrames.forEach(id => {
         cancelAnimationFrame(id);
       });
-      activeAnimationFrames.current.clear();
+      currentFrames.clear();
       // Remove all event listeners
-      eventListeners.current.forEach(({ type, listener }) => {
+      const currentListeners = eventListeners.current;
+      currentListeners.forEach(({ type, listener }) => {
         document.removeEventListener(type, listener);
       });
       eventListeners.current = [];

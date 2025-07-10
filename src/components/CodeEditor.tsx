@@ -289,6 +289,13 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
       declare const ctx: CanvasRenderingContext2D;
       declare function requestAnimationFrame(callback: FrameRequestCallback): number;
       declare function cancelAnimationFrame(handle: number): void;
+      
+      // Three.js types
+      declare const THREE: typeof import('three');
+      declare const GLTFLoader: typeof import('three/examples/jsm/loaders/GLTFLoader.js').GLTFLoader;
+      declare const OrbitControls: typeof import('three/examples/jsm/controls/OrbitControls.js').OrbitControls;
+      declare const FBXLoader: typeof import('three/examples/jsm/loaders/FBXLoader.js').FBXLoader;
+      declare const OBJLoader: typeof import('three/examples/jsm/loaders/OBJLoader.js').OBJLoader;
     `, 'canvas-api.d.ts');
 
     // Configure JavaScript language features

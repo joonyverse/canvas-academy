@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronRight, Play, Square, MousePointer, Sparkles, Gamepad2, Wifi, Atom } from 'lucide-react';
+import { ChevronRight, Play, Square, MousePointer, Sparkles, Gamepad2, Wifi, Atom, Box } from 'lucide-react';
 import { categories, examples } from '../data/examples';
 import { Example } from '../types';
 
@@ -15,7 +15,8 @@ const iconMap = {
   Sparkles,
   Gamepad2,
   Wifi,
-  Atom
+  Atom,
+  Box
 };
 
 const difficultyColors = {

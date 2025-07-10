@@ -85,7 +85,7 @@ function App() {
               currentCode={currentCode}
             />
 
-            <div className="flex-1 overflow-hidden">
+            <div className="flex flex-1 overflow-hidden">
               <Layout
                 panelState={panelState}
                 exampleState={exampleState}

@@ -5,6 +5,7 @@ import { effectsExamples } from './effects';
 import { gameExamples } from './games';
 import { wirelessExamples } from './wireless';
 import { physicsExamples } from './physics';
+import { threejsExamples } from './threejs';
 
 export const allExamples = [
   ...basicExamples,
@@ -13,7 +14,8 @@ export const allExamples = [
   ...effectsExamples,
   ...gameExamples,
   ...wirelessExamples,
-  ...physicsExamples
+  ...physicsExamples,
+  ...threejsExamples
 ];
 
 // Re-export individual categories
@@ -24,5 +26,6 @@ export {
   effectsExamples,
   gameExamples,
   wirelessExamples,
-  physicsExamples
+  physicsExamples,
+  threejsExamples
 };
