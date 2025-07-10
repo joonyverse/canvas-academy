@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronRight, Play, Square, MousePointer, Sparkles, Gamepad2, Wifi } from 'lucide-react';
+import { ChevronRight, Play, Square, MousePointer, Sparkles, Gamepad2, Wifi, Atom } from 'lucide-react';
 import { categories, examples } from '../data/examples';
 import { Example } from '../types';
 
@@ -14,7 +14,8 @@ const iconMap = {
   MousePointer,
   Sparkles,
   Gamepad2,
-  Wifi
+  Wifi,
+  Atom
 };
 
 const difficultyColors = {
@@ -29,11 +30,7 @@ const ExampleList: React.FC<ExampleListProps> = ({ selectedExample, onExampleSel
   return (
     <div className="bg-white border-r border-gray-300 h-full overflow-y-auto">
       <div className="px-4 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-        <div className="flex items-center space-x-2">
-          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-          <h2 className="text-lg font-semibold text-gray-900">Canvas Examples</h2>
-        </div>
-        <p className="text-sm text-gray-600 mt-1">Interactive tutorials to master Canvas API</p>
+        <h2 className="text-lg font-semibold text-gray-900">Canvas Examples</h2>
       </div>
 
       <div className="p-3 space-y-3">
