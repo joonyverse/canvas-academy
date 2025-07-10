@@ -1,5 +1,5 @@
 import { Category } from '../types';
-import { allExamples } from './examples';
+import { allExamples } from './examples/index';
 
 export const categories: Category[] = [
   {
