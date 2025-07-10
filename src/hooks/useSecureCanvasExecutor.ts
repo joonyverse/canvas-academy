@@ -59,19 +59,18 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
       let ctx: CanvasRenderingContext2D | null = null;
       
       if (usesThreeJS) {
-        // For Three.js, create a fresh canvas element to avoid context conflicts
-        const newCanvas = document.createElement('canvas');
-        newCanvas.width = canvas.width;
-        newCanvas.height = canvas.height;
-        newCanvas.style.width = canvas.style.width;
-        newCanvas.style.height = canvas.style.height;
-        newCanvas.style.display = canvas.style.display;
-        newCanvas.className = canvas.className;
-        
-        // Replace the current canvas with the new one
-        if (canvas.parentNode) {
-          canvas.parentNode.replaceChild(newCanvas, canvas);
-          canvasRef.current = newCanvas;
+        // For Three.js, we need to clear any existing 2D context first
+        // But we'll let the component handle canvas replacement via React
+        const existingContext = canvas.getContext('2d');
+        if (existingContext) {
+          // Clear the 2D context completely
+          existingContext.clearRect(0, 0, canvas.width, canvas.height);
+          // Try to reset the context
+          try {
+            existingContext.reset?.();
+          } catch (e) {
+            // Reset not available in all browsers
+          }
         }
       } else {
         // For 2D canvas operations, get 2D context and clear thoroughly

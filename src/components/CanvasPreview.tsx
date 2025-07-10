@@ -12,9 +12,11 @@ interface CanvasPreviewProps {
 const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun, onStop }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastContextTypeRef = useRef<'2d' | 'webgl' | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [canvasSize, setCanvasSize] = React.useState({ width: 400, height: 300 });
   const [showConsole, setShowConsole] = React.useState(false);
+  const [canvasKey, setCanvasKey] = React.useState(0);
 
   const onError = React.useCallback((errorMessage: string) => {
     setError(errorMessage);
@@ -129,6 +131,23 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun, o
       stopExecution();
     }
   }, [isRunning]); // Only depend on isRunning
+
+  // Detect if code type changes (2D vs Three.js) and remount canvas
+  useEffect(() => {
+    const usesThreeJS = code.includes('THREE.') || code.includes('new THREE') || 
+                       code.includes('GLTFLoader') || code.includes('OrbitControls') ||
+                       code.includes('WebGLRenderer') || code.includes('AnimationMixer');
+    
+    const currentContextType = usesThreeJS ? 'webgl' : '2d';
+    
+    if (lastContextTypeRef.current !== null && lastContextTypeRef.current !== currentContextType) {
+      // Context type changed, force remount canvas
+      console.log(`Context type changed from ${lastContextTypeRef.current} to ${currentContextType}, remounting canvas`);
+      setCanvasKey(prev => prev + 1);
+    }
+    
+    lastContextTypeRef.current = currentContextType;
+  }, [code]);
 
   // Clear canvas and stop execution when code changes (example switch)
   useEffect(() => {
@@ -248,12 +267,11 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun, o
           ) : (
             <div className="relative">
               <canvas
+                key={canvasKey} // Force remount when context type changes
                 ref={(canvas) => {
                   if (canvas) {
-                    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-                    if (ctx && canvasRef) {
-                      canvasRef.current = canvas;
-                    }
+                    // Don't force a 2D context here - let the executor decide
+                    canvasRef.current = canvas;
                   }
                 }}
                 width={canvasSize.width}
