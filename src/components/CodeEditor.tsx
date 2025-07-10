@@ -91,6 +91,15 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [code]);
 
+  // Cleanup cursor fixes on unmount
+  useEffect(() => {
+    return () => {
+      if (editorRef.current && (editorRef.current as any)._cursorCleanup) {
+        (editorRef.current as any)._cursorCleanup();
+      }
+    };
+  }, []);
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(code);
@@ -158,19 +167,64 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
     
-    // Fix cursor visibility issues
+    // Fix cursor visibility issues with continuous monitoring
     const editorDom = editor.getDomNode();
     if (editorDom) {
-      editorDom.style.cursor = 'text';
-      // Ensure all child elements have proper cursor
-      const elements = editorDom.querySelectorAll('*');
-      elements.forEach((el: HTMLElement) => {
-        if (!el.classList.contains('minimap') && 
-            !el.classList.contains('scrollbar') &&
-            !el.classList.contains('suggest-widget')) {
+      const fixCursorStyles = () => {
+        editorDom.style.cursor = 'text';
+        editorDom.style.caretColor = '#000000';
+        
+        // Ensure all child elements have proper cursor
+        const elements = editorDom.querySelectorAll('*');
+        elements.forEach((el: HTMLElement) => {
+          if (!el.classList.contains('minimap') && 
+              !el.classList.contains('scrollbar') &&
+              !el.classList.contains('suggest-widget') &&
+              !el.classList.contains('monaco-scrollable-element')) {
+            el.style.cursor = 'text';
+            el.style.caretColor = '#000000';
+          }
+        });
+        
+        // Force cursor visibility on text areas
+        const textAreas = editorDom.querySelectorAll('.view-line, .inputarea, .view-lines');
+        textAreas.forEach((el: HTMLElement) => {
           el.style.cursor = 'text';
-        }
+          el.style.caretColor = '#000000';
+        });
+      };
+      
+      // Initial fix
+      fixCursorStyles();
+      
+      // Monitor DOM changes and reapply fixes
+      const observer = new MutationObserver(() => {
+        fixCursorStyles();
       });
+      
+      observer.observe(editorDom, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'class']
+      });
+      
+      // Periodic fix to catch any missed changes
+      const intervalId = setInterval(fixCursorStyles, 500);
+      
+      // Mouse event listeners to force cursor fix
+      editorDom.addEventListener('mouseover', fixCursorStyles);
+      editorDom.addEventListener('mouseenter', fixCursorStyles);
+      editorDom.addEventListener('focus', fixCursorStyles);
+      
+      // Store cleanup functions
+      (editor as any)._cursorCleanup = () => {
+        observer.disconnect();
+        clearInterval(intervalId);
+        editorDom.removeEventListener('mouseover', fixCursorStyles);
+        editorDom.removeEventListener('mouseenter', fixCursorStyles);
+        editorDom.removeEventListener('focus', fixCursorStyles);
+      };
     }
 
     // Add custom keyboard shortcuts

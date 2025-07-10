@@ -2,55 +2,80 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Monaco Editor Cursor Fix */
+/* Monaco Editor Cursor Fix - Comprehensive Solution */
 .monaco-editor-container,
-.monaco-editor-container * {
+.monaco-editor-container *:not(.minimap):not(.scrollbar):not(.suggest-widget):not(.monaco-scrollable-element) {
     cursor: text !important;
+    caret-color: #000000 !important;
 }
 
 .monaco-editor {
     cursor: text !important;
+    caret-color: #000000 !important;
 }
 
 .monaco-editor .view-overlays,
 .monaco-editor .view-lines,
 .monaco-editor .inputarea,
 .monaco-editor .margin,
-.monaco-editor .monaco-editor-background {
-    cursor: text !important;
-}
-
-/* Ensure text cursor in all editor areas */
+.monaco-editor .monaco-editor-background,
 .monaco-editor .view-line,
-.monaco-editor .view-line span {
+.monaco-editor .view-line span,
+.monaco-editor .view-zone,
+.monaco-editor .lines-content,
+.monaco-editor .overflow-guard {
     cursor: text !important;
+    caret-color: #000000 !important;
 }
 
-/* Override any pointer cursors in editor */
+/* Force text cursor with high specificity */
+.monaco-editor div:not([class*="minimap"]):not([class*="scrollbar"]):not([class*="suggest"]),
+.monaco-editor span:not([class*="minimap"]):not([class*="scrollbar"]):not([class*="suggest"]) {
+    cursor: text !important;
+    caret-color: #000000 !important;
+}
+
+/* Override any pointer cursors in editor text areas */
 .monaco-editor .cursors-layer .cursor {
     background-color: #000 !important;
     border-color: #000 !important;
+    color: #000 !important;
 }
 
-/* Fix minimap cursor */
-.monaco-editor .minimap {
-    cursor: pointer !important;
+/* Specific fix for cursor when hovering */
+.monaco-editor:hover,
+.monaco-editor:hover .view-lines,
+.monaco-editor:hover .view-line {
+    cursor: text !important;
+    caret-color: #000000 !important;
 }
 
+/* Animation to prevent flash of wrong cursor */
+.monaco-editor * {
+    transition: cursor 0ms !important;
+}
+
+/* Fix minimap cursor - should remain pointer */
+.monaco-editor .minimap,
+.monaco-editor .minimap *,
 .monaco-editor .minimap .minimap-slider {
     cursor: pointer !important;
 }
 
-/* Fix scrollbar cursors */
-.monaco-editor .monaco-scrollable-element .scrollbar {
+/* Fix scrollbar cursors - should remain pointer */
+.monaco-editor .monaco-scrollable-element .scrollbar,
+.monaco-editor .monaco-scrollable-element .scrollbar * {
     cursor: pointer !important;
 }
 
-/* Prevent cursor issues on hover */
-.monaco-editor .suggest-widget {
-    cursor: pointer !important;
-}
-
+/* Prevent cursor issues on hover for UI elements */
+.monaco-editor .suggest-widget,
+.monaco-editor .suggest-widget *,
 .monaco-editor .suggest-widget .monaco-list-row {
     cursor: pointer !important;
+}
+
+/* Override any system cursor resets */
+.monaco-editor .view-lines .view-line span[style*="cursor"] {
+    cursor: text !important;
 }
