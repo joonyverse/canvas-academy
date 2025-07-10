@@ -59,19 +59,9 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
       let ctx: CanvasRenderingContext2D | null = null;
       
       if (usesThreeJS) {
-        // For Three.js, we need to clear any existing 2D context first
-        // But we'll let the component handle canvas replacement via React
-        const existingContext = canvas.getContext('2d');
-        if (existingContext) {
-          // Clear the 2D context completely
-          existingContext.clearRect(0, 0, canvas.width, canvas.height);
-          // Try to reset the context
-          try {
-            existingContext.reset?.();
-          } catch (e) {
-            // Reset not available in all browsers
-          }
-        }
+        // For Three.js, don't create any context - let Three.js handle it
+        // Just make sure the canvas is clean
+        console.log('Three.js code detected, skipping 2D context creation');
       } else {
         // For 2D canvas operations, get 2D context and clear thoroughly
         ctx = canvas.getContext('2d');
@@ -283,16 +273,29 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
       const canvas = canvasRef.current;
       
       // Check if it's a 2D context and clear it
-      const ctx2d = canvas.getContext('2d');
-      if (ctx2d) {
-        ctx2d.clearRect(0, 0, canvas.width, canvas.height);
-        ctx2d.reset?.(); // Reset if available
+      try {
+        const ctx2d = canvas.getContext('2d');
+        if (ctx2d) {
+          ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+          ctx2d.reset?.(); // Reset if available
+        }
+      } catch (e) {
+        // Ignore context errors
       }
       
       // For WebGL contexts, clear the viewport
-      const webglContext = canvas.getContext('webgl') || canvas.getContext('webgl2');
-      if (webglContext) {
-        webglContext.clear(webglContext.COLOR_BUFFER_BIT | webglContext.DEPTH_BUFFER_BIT);
+      try {
+        const webglContext = canvas.getContext('webgl') || canvas.getContext('webgl2');
+        if (webglContext) {
+          webglContext.clear(webglContext.COLOR_BUFFER_BIT | webglContext.DEPTH_BUFFER_BIT);
+          // Force context loss to properly cleanup
+          const loseContext = webglContext.getExtension('WEBGL_lose_context');
+          if (loseContext) {
+            loseContext.loseContext();
+          }
+        }
+      } catch (e) {
+        // Ignore context errors
       }
     }
 

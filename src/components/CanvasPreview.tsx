@@ -143,27 +143,39 @@ const CanvasPreview: React.FC<CanvasPreviewProps> = ({ code, isRunning, onRun, o
     if (lastContextTypeRef.current !== null && lastContextTypeRef.current !== currentContextType) {
       // Context type changed, force remount canvas
       console.log(`Context type changed from ${lastContextTypeRef.current} to ${currentContextType}, remounting canvas`);
+      // Stop execution first
+      stopExecution();
+      // Force remount
       setCanvasKey(prev => prev + 1);
     }
     
     lastContextTypeRef.current = currentContextType;
-  }, [code]);
+  }, [code, stopExecution]);
 
-  // Clear canvas and stop execution when code changes (example switch)
+  // Clear canvas when code changes (example switch) - but not when context type changes
   useEffect(() => {
-    // Stop any running execution first
-    stopExecution();
-    // Then clear the canvas
-    clearCanvas();
+    // Only clear canvas if we're not remounting (context type change is handled above)
+    const usesThreeJS = code.includes('THREE.') || code.includes('new THREE') || 
+                       code.includes('GLTFLoader') || code.includes('OrbitControls') ||
+                       code.includes('WebGLRenderer') || code.includes('AnimationMixer');
+    
+    const currentContextType = usesThreeJS ? 'webgl' : '2d';
+    
+    if (lastContextTypeRef.current === currentContextType) {
+      // Same context type, just clear and stop
+      stopExecution();
+      clearCanvas();
+    }
   }, [code, clearCanvas, stopExecution]);
 
 
-  // Initialize canvas when component mounts
+  // Initialize canvas when component mounts or canvas is remounted
   useEffect(() => {
     if (canvasRef.current) {
+      console.log('Initializing canvas with key:', canvasKey);
       initializeCanvas(canvasRef.current);
     }
-  }, [initializeCanvas]);
+  }, [initializeCanvas, canvasKey]);
 
   // Update canvas size when it changes (preserve animations)
   useEffect(() => {
