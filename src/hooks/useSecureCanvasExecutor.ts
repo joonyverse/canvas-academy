@@ -51,7 +51,8 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
       
       // Check if code uses Three.js to determine context type
       const usesThreeJS = code.includes('THREE.') || code.includes('new THREE') || 
-                         code.includes('GLTFLoader') || code.includes('OrbitControls');
+                         code.includes('GLTFLoader') || code.includes('OrbitControls') ||
+                         code.includes('WebGLRenderer') || code.includes('AnimationMixer');
       
       let ctx: CanvasRenderingContext2D | null = null;
       
