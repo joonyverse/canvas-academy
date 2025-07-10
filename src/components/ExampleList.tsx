@@ -30,7 +30,14 @@ const ExampleList: React.FC<ExampleListProps> = ({ selectedExample, onExampleSel
   return (
     <div className="bg-white border-r border-gray-300 h-full overflow-y-auto">
       <div className="px-4 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-        <h2 className="text-lg font-semibold text-gray-900">Canvas Examples</h2>
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900">Canvas Examples</h2>
+        </div>
       </div>
 
       <div className="p-3 space-y-3">
