@@ -157,6 +157,21 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
 
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
+    
+    // Fix cursor visibility issues
+    const editorDom = editor.getDomNode();
+    if (editorDom) {
+      editorDom.style.cursor = 'text';
+      // Ensure all child elements have proper cursor
+      const elements = editorDom.querySelectorAll('*');
+      elements.forEach((el: HTMLElement) => {
+        if (!el.classList.contains('minimap') && 
+            !el.classList.contains('scrollbar') &&
+            !el.classList.contains('suggest-widget')) {
+          el.style.cursor = 'text';
+        }
+      });
+    }
 
     // Add custom keyboard shortcuts
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
@@ -310,6 +325,27 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
       reactNamespace: 'React',
       allowJs: true,
       typeRoots: ['node_modules/@types']
+    });
+
+    // Define custom theme to fix cursor visibility
+    monaco.editor.defineTheme('canvas-academy-light', {
+      base: 'vs',
+      inherit: true,
+      rules: [],
+      colors: {
+        'editorCursor.foreground': '#000000',
+        'editorCursor.background': '#ffffff'
+      }
+    });
+
+    monaco.editor.defineTheme('canvas-academy-dark', {
+      base: 'vs-dark',
+      inherit: true,
+      rules: [],
+      colors: {
+        'editorCursor.foreground': '#ffffff',
+        'editorCursor.background': '#000000'
+      }
     });
   };
 
@@ -590,7 +626,9 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
           value={code}
           onChange={handleCodeChange}
           onMount={handleEditorDidMount}
-          theme={editorSettings.theme}
+          theme={editorSettings.theme === 'vs' ? 'canvas-academy-light' : 
+                 editorSettings.theme === 'vs-dark' ? 'canvas-academy-dark' : 
+                 editorSettings.theme}
           options={{
             minimap: { 
               enabled: editorSettings.minimap,
@@ -687,9 +725,17 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
             },
             hover: {
               enabled: true
-            }
+            },
+            // Fix cursor visibility issues
+            cursorStyle: 'line',
+            cursorWidth: 2,
+            cursorBlinking: 'blink',
+            hideCursorInOverviewRuler: false,
+            renderValidationDecorations: 'on',
+            // Ensure proper mouse cursor
+            mouseWheelZoom: false
           }}
-          className="cursor-text"
+          className="monaco-editor-container"
         />
 
         {/* Keyboard shortcuts help - positioned to avoid overlap */}
