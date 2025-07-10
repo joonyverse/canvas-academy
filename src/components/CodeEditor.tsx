@@ -1,8 +1,10 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import Editor from '@monaco-editor/react';
-import { RotateCcw, Copy, Check, Settings, Download, Upload, Maximize2, Minimize2, AlertTriangle, Save } from 'lucide-react';
+import { RotateCcw, Copy, Check, Settings, Download, Upload, Maximize2, Minimize2, AlertTriangle, Save, Lightbulb, Zap } from 'lucide-react';
 import { validateAndSanitizeFile } from '../utils/fileValidation';
 import { useProject } from '../contexts/ProjectContext';
+import { canvasSnippets, canvasApiDocumentation } from '../utils/canvasSnippets';
+import { CanvasCodeValidator, ValidationError } from '../utils/canvasValidation';
 
 interface CodeEditorProps {
   code: string;
@@ -19,6 +21,9 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
   const [uploadError, setUploadError] = React.useState<string | null>(null);
   const [isUploading, setIsUploading] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [performanceSuggestions, setPerformanceSuggestions] = useState<string[]>([]);
   const [editorSettings, setEditorSettings] = React.useState({
     fontSize: 14,
     wordWrap: 'on' as 'on' | 'off',
@@ -42,6 +47,15 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
     }
   };
 
+  // Validate code in real-time
+  const validateCode = useCallback((codeToValidate: string) => {
+    const result = CanvasCodeValidator.validateCode(codeToValidate);
+    setValidationErrors(result.errors);
+    
+    const suggestions = CanvasCodeValidator.getPerformanceSuggestions(codeToValidate);
+    setPerformanceSuggestions(suggestions);
+  }, []);
+
   const handleCodeChange = (value: string | undefined) => {
     const newCode = value || '';
     onChange(newCode);
@@ -51,7 +65,15 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
     if (activeFile && activeFile.content !== newCode) {
       setHasUnsavedChanges(true);
     }
+
+    // Validate code in real-time
+    validateCode(newCode);
   };
+
+  // Initial validation when component mounts or code changes from outside
+  useEffect(() => {
+    validateCode(code);
+  }, [code, validateCode]);
 
   // Handle Ctrl+S keyboard shortcut
   useEffect(() => {
@@ -142,6 +164,88 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
       onReset();
     });
 
+    // Register Canvas snippets as completion items
+    monaco.languages.registerCompletionItemProvider('javascript', {
+      provideCompletionItems: (model: any, position: any) => {
+        const suggestions = canvasSnippets.map(snippet => ({
+          label: snippet.label,
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: snippet.insertText,
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          documentation: {
+            value: snippet.documentation,
+            isTrusted: true
+          },
+          detail: snippet.detail,
+          range: {
+            startLineNumber: position.lineNumber,
+            endLineNumber: position.lineNumber,
+            startColumn: position.column,
+            endColumn: position.column
+          }
+        }));
+
+        // Add Canvas API methods with documentation
+        const canvasApiSuggestions = Object.entries(canvasApiDocumentation).map(([method, info]) => {
+          const parameters = info.parameters ? `(${info.parameters.join(', ')})` : '()';
+          const documentation = [
+            info.description,
+            info.parameters && info.parameters.length > 0 ? `\n**Parameters:** ${info.parameters.join(', ')}` : '',
+            info.returnType ? `\n**Returns:** ${info.returnType}` : '',
+            info.example ? `\n\n**Example:**\n\`\`\`javascript\n${info.example}\n\`\`\`` : '',
+            info.mdn ? `\n\n[📖 MDN Documentation](${info.mdn})` : ''
+          ].filter(Boolean).join('');
+
+          return {
+            label: method,
+            kind: monaco.languages.CompletionItemKind.Method,
+            insertText: method,
+            documentation: {
+              value: documentation,
+              isTrusted: true
+            },
+            detail: `${info.returnType || 'void'} ${method}${parameters}`,
+            range: {
+              startLineNumber: position.lineNumber,
+              endLineNumber: position.lineNumber,
+              startColumn: position.column,
+              endColumn: position.column
+            }
+          };
+        });
+
+        return {
+          suggestions: [...suggestions, ...canvasApiSuggestions]
+        };
+      }
+    });
+
+    // Set up real-time diagnostics
+    const updateMarkers = (code: string) => {
+      const result = CanvasCodeValidator.validateCode(code);
+      const markers = result.errors.map(error => ({
+        startLineNumber: error.line,
+        startColumn: error.column,
+        endLineNumber: error.line,
+        endColumn: error.column + 10,
+        message: error.message,
+        severity: error.severity === 'error' ? monaco.MarkerSeverity.Error :
+                 error.severity === 'warning' ? monaco.MarkerSeverity.Warning :
+                 monaco.MarkerSeverity.Info,
+        source: error.source || 'canvas-validator'
+      }));
+      
+      monaco.editor.setModelMarkers(editor.getModel(), 'canvas-validator', markers);
+    };
+
+    // Update markers on content change
+    editor.onDidChangeModelContent(() => {
+      updateMarkers(editor.getValue());
+    });
+
+    // Initial validation
+    updateMarkers(code);
+
     // Add Canvas API autocompletion
     monaco.languages.typescript.javascriptDefaults.addExtraLib(`
       interface CanvasRenderingContext2D {
@@ -225,6 +329,20 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
         </div>
         <div className="flex items-center space-x-1.5">
           <button
+            onClick={() => setShowDiagnostics(!showDiagnostics)}
+            className={`w-10 h-10 flex items-center justify-center rounded-md transition-colors relative ${
+              validationErrors.length > 0 ? 'text-red-600 hover:text-red-700 hover:bg-red-50' : 'text-gray-600 hover:text-gray-700 hover:bg-gray-100'
+            }`}
+            title={`Diagnostics (${validationErrors.length} issues)`}
+          >
+            <AlertTriangle className="w-5 h-5" />
+            {validationErrors.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                {validationErrors.length > 9 ? '9+' : validationErrors.length}
+              </span>
+            )}
+          </button>
+          <button
             onClick={handleSave}
             disabled={isSaving || !getActiveFile()}
             className={`w-10 h-10 flex items-center justify-center rounded-md text-gray-600 hover:text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50 ${hasUnsavedChanges ? 'border border-gray-400' : ''}`}
@@ -291,6 +409,49 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
           >
             ×
           </button>
+        </div>
+      )}
+
+      {showDiagnostics && (validationErrors.length > 0 || performanceSuggestions.length > 0) && (
+        <div className="max-h-40 overflow-y-auto bg-gray-50 border-b border-gray-200">
+          {validationErrors.length > 0 && (
+            <div className="p-3 border-b border-gray-200">
+              <div className="flex items-center space-x-2 mb-2">
+                <AlertTriangle className="w-4 h-4 text-red-500" />
+                <h4 className="text-sm font-medium text-gray-900">Code Issues ({validationErrors.length})</h4>
+              </div>
+              <div className="space-y-1">
+                {validationErrors.map((error, index) => (
+                  <div key={index} className="flex items-start space-x-2 text-xs">
+                    <span className={`px-1.5 py-0.5 rounded text-white text-xs ${
+                      error.severity === 'error' ? 'bg-red-500' : 
+                      error.severity === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+                    }`}>
+                      {error.severity === 'error' ? 'ERR' : error.severity === 'warning' ? 'WARN' : 'INFO'}
+                    </span>
+                    <span className="text-gray-600">Line {error.line}:</span>
+                    <span className="text-gray-800 flex-1">{error.message}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {performanceSuggestions.length > 0 && (
+            <div className="p-3">
+              <div className="flex items-center space-x-2 mb-2">
+                <Lightbulb className="w-4 h-4 text-yellow-500" />
+                <h4 className="text-sm font-medium text-gray-900">Performance Suggestions</h4>
+              </div>
+              <div className="space-y-1">
+                {performanceSuggestions.map((suggestion, index) => (
+                  <div key={index} className="flex items-start space-x-2 text-xs">
+                    <Zap className="w-3 h-3 text-yellow-500 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-700">{suggestion}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -453,7 +614,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
 
         {/* Keyboard shortcuts help */}
         <div className="absolute bottom-2 right-2 text-xs text-gray-500 bg-white bg-opacity-90 px-2 py-1 rounded shadow-sm">
-          <div>Ctrl+Enter: Run • Ctrl+R: Reset • Shift+Alt+F: Format</div>
+          <div>Ctrl+Enter: Run • Ctrl+R: Reset • Ctrl+Space: Snippets • Shift+Alt+F: Format</div>
         </div>
       </div>
 

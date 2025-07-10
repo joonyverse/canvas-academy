@@ -113,5 +113,13 @@ ctx.fillStyle = '#f39c12';
 ctx.fillText(text, 50, 400);
 ctx.strokeStyle = '#d35400';
 ctx.strokeRect(50, 375, metrics.width, 30);`
+  },
+  {
+    id: 'three-basic-cube',
+    title: 'Three.js Cube',
+    description: 'three.js로 3D 큐브를 렌더링하는 예제',
+    category: 'basics',
+    difficulty: 'beginner',
+    code: `// three.js로 3D 큐브를 렌더링합니다.\n// THREE는 이미 전역으로 제공됩니다.\nconst scene = new THREE.Scene();\nconst camera = new THREE.PerspectiveCamera(75, canvas.width / canvas.height, 0.1, 1000);\nconst renderer = new THREE.WebGLRenderer({ canvas });\n\nconst geometry = new THREE.BoxGeometry();\nconst material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });\nconst cube = new THREE.Mesh(geometry, material);\nscene.add(cube);\n\ncamera.position.z = 2;\n\nfunction animate() {\n  requestAnimationFrame(animate);\n  cube.rotation.x += 0.01;\n  cube.rotation.y += 0.01;\n  renderer.render(scene, camera);\n}\nanimate();`
   }
 ];

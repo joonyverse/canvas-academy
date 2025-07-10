@@ -1,14 +1,15 @@
 import { useRef, useCallback, useEffect, useState } from 'react';
+import * as THREE from 'three';
 
 export interface ExecutionResult {
   success: boolean;
   error?: string;
-  logs?: Array<{ level: string; args: any[] }>;
+  logs?: Array<{ level: string; args: unknown[] }>;
 }
 
 export interface UseSecureCanvasExecutorOptions {
   onError?: (error: string) => void;
-  onConsole?: (level: string, args: any[]) => void;
+  onConsole?: (level: string, args: unknown[]) => void;
   maxExecutionTime?: number;
 }
 
@@ -19,7 +20,7 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
   const activeAnimationFrames = useRef<Set<number>>(new Set());
   const eventListeners = useRef<Array<{ type: string, listener: EventListener }>>([]);
   const [isReady, setIsReady] = useState(false);
-  const [logs, setLogs] = useState<Array<{ level: string; args: any[] }>>([]);
+  const [logs, setLogs] = useState<Array<{ level: string; args: unknown[] }>>([]);
 
   const { onError, onConsole, maxExecutionTime = 10000 } = options;
 
@@ -60,39 +61,40 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
         });
         activeAnimationFrames.current.clear();
         // Create secure execution environment
-        const capturedLogs: Array<{ level: string; args: any[] }> = [];
+        const capturedLogs: Array<{ level: string; args: unknown[] }> = [];
 
         const safeGlobals = {
           canvas,
           ctx,
           Math,
+          THREE, // three.js를 전역으로 제공
           console: {
-            log: (...args: any[]) => {
+            log: (...args: unknown[]) => {
               capturedLogs.push({ level: 'log', args });
               onConsole?.('log', args);
             },
-            error: (...args: any[]) => {
+            error: (...args: unknown[]) => {
               capturedLogs.push({ level: 'error', args });
               onConsole?.('error', args);
             },
-            warn: (...args: any[]) => {
+            warn: (...args: unknown[]) => {
               capturedLogs.push({ level: 'warn', args });
               onConsole?.('warn', args);
             },
-            info: (...args: any[]) => {
+            info: (...args: unknown[]) => {
               capturedLogs.push({ level: 'info', args });
               onConsole?.('info', args);
             }
           },
           document: {
-            addEventListener: (type: string, listener: Function) => {
+            addEventListener: (type: string, listener: EventListener) => {
               if (type === 'keydown' || type === 'keyup') {
                 const eventListener = listener as EventListener;
                 document.addEventListener(type, eventListener);
                 eventListeners.current.push({ type, listener: eventListener });
               }
             },
-            removeEventListener: (type: string, listener: Function) => {
+            removeEventListener: (type: string, listener: EventListener) => {
               if (type === 'keydown' || type === 'keyup') {
                 const eventListener = listener as EventListener;
                 document.removeEventListener(type, eventListener);
@@ -102,7 +104,7 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
               }
             }
           },
-          setTimeout: (callback: Function, delay: number) => {
+          setTimeout: (callback: () => void, delay: number) => {
             return setTimeout(() => {
               try {
                 callback();
@@ -112,7 +114,7 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
             }, Math.min(delay, 5000));
           },
           clearTimeout,
-          setInterval: (callback: Function, delay: number) => {
+          setInterval: (callback: () => void, delay: number) => {
             return setInterval(() => {
               try {
                 callback();
@@ -122,7 +124,7 @@ export const useSecureCanvasExecutor = (options: UseSecureCanvasExecutorOptions 
             }, Math.max(delay, 16));
           },
           clearInterval,
-          requestAnimationFrame: (callback: Function) => {
+          requestAnimationFrame: (callback: () => void) => {
             const id = requestAnimationFrame(() => {
               try {
                 callback();
