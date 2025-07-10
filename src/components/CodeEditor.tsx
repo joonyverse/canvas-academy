@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import Editor from '@monaco-editor/react';
-import { RotateCcw, Copy, Check, Settings, Download, Upload, Maximize2, Minimize2, AlertTriangle, Save, Lightbulb, Zap } from 'lucide-react';
+import { RotateCcw, Copy, Check, Settings, Download, Upload, Maximize2, Minimize2, AlertTriangle, Save, Lightbulb, Zap, Map } from 'lucide-react';
 import { validateAndSanitizeFile } from '../utils/fileValidation';
 import { useProject } from '../contexts/ProjectContext';
 import { canvasSnippets, canvasApiDocumentation } from '../utils/canvasSnippets';
@@ -27,7 +27,10 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
   const [editorSettings, setEditorSettings] = React.useState({
     fontSize: 14,
     wordWrap: 'on' as 'on' | 'off',
-    minimap: false,
+    minimap: true,
+    minimapShowSlider: 'always' as 'always' | 'mouseover',
+    minimapRenderCharacters: true,
+    minimapMaxColumn: 120,
     lineNumbers: 'on' as 'on' | 'off',
     theme: 'vs' as 'vs' | 'vs-dark' | 'hc-black'
   });
@@ -162,6 +165,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
 
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyR, () => {
       onReset();
+    });
+
+    // Toggle minimap with Ctrl+M
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyM, () => {
+      updateEditorSettings('minimap', !editorSettings.minimap);
     });
 
     // Register Canvas snippets as completion items
@@ -351,6 +359,15 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
             <Save className="w-5 h-5" />
           </button>
           <button
+            onClick={() => updateEditorSettings('minimap', !editorSettings.minimap)}
+            className={`w-10 h-10 flex items-center justify-center rounded-md transition-colors ${
+              editorSettings.minimap ? 'text-blue-600 bg-blue-50 hover:bg-blue-100' : 'text-gray-600 hover:text-gray-700 hover:bg-gray-100'
+            }`}
+            title={`${editorSettings.minimap ? 'Hide' : 'Show'} Minimap`}
+          >
+            <Map className="w-5 h-5" />
+          </button>
+          <button
             onClick={() => setShowSettings(!showSettings)}
             className="w-10 h-10 flex items-center justify-center rounded-md text-gray-600 hover:text-gray-700 hover:bg-gray-100 transition-colors"
             title="Settings"
@@ -457,7 +474,8 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
 
       {showSettings && (
         <div className="p-4 bg-gray-50 border-b border-gray-200">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Font Size</label>
               <select
@@ -521,6 +539,39 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
                 <option value="on">On</option>
               </select>
             </div>
+
+            </div>
+
+            {editorSettings.minimap && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Minimap Settings</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Slider Display</label>
+                    <select
+                      value={editorSettings.minimapShowSlider}
+                      onChange={(e) => updateEditorSettings('minimapShowSlider', e.target.value)}
+                      className="w-full px-3 py-1 text-xs bg-white border border-gray-300 rounded-md text-gray-700 focus:border-gray-400 focus:outline-none"
+                    >
+                      <option value="always">Always Show</option>
+                      <option value="mouseover">On Hover</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Render Mode</label>
+                    <select
+                      value={editorSettings.minimapRenderCharacters ? 'chars' : 'blocks'}
+                      onChange={(e) => updateEditorSettings('minimapRenderCharacters', e.target.value === 'chars')}
+                      className="w-full px-3 py-1 text-xs bg-white border border-gray-300 rounded-md text-gray-700 focus:border-gray-400 focus:outline-none"
+                    >
+                      <option value="blocks">Color Blocks</option>
+                      <option value="chars">Text Characters</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -534,7 +585,16 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
           onMount={handleEditorDidMount}
           theme={editorSettings.theme}
           options={{
-            minimap: { enabled: editorSettings.minimap },
+            minimap: { 
+              enabled: editorSettings.minimap,
+              showSlider: editorSettings.minimapShowSlider,
+              renderCharacters: editorSettings.minimapRenderCharacters,
+              maxColumn: editorSettings.minimapMaxColumn,
+              scale: 1,
+              side: 'right',
+              size: 'proportional', // 'proportional' | 'fill' | 'fit'
+              autohide: false // 항상 표시
+            },
             scrollBeyondLastLine: false,
             fontSize: editorSettings.fontSize,
             fontFamily: 'Monaco, Menlo, "Courier New", monospace',
@@ -552,11 +612,16 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
             overviewRulerBorder: false,
             hideCursorInOverviewRuler: true,
             overviewRulerLanes: 2,
+            // 미니맵과 함께 작동하는 overview ruler 설정
+            rulers: [80, 120], // 코드 길이 가이드라인
             scrollbar: {
               vertical: 'visible',
               horizontal: 'visible',
               verticalScrollbarSize: 12,
-              horizontalScrollbarSize: 12
+              horizontalScrollbarSize: 12,
+              // 미니맵이 켜져있을 때 스크롤바 조정
+              handleMouseWheel: true,
+              useShadows: false
             },
             // Advanced features
             suggest: {
@@ -613,8 +678,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
         />
 
         {/* Keyboard shortcuts help */}
-        <div className="absolute bottom-2 right-2 text-xs text-gray-500 bg-white bg-opacity-90 px-2 py-1 rounded shadow-sm">
-          <div>Ctrl+Enter: Run • Ctrl+R: Reset • Ctrl+Space: Snippets • Shift+Alt+F: Format</div>
+        <div className="absolute bottom-2 right-2 text-xs text-gray-500 bg-white bg-opacity-90 px-2 py-1 rounded shadow-sm max-w-md">
+          <div className="space-y-0.5">
+            <div>Ctrl+Enter: Run • Ctrl+R: Reset • Ctrl+M: Toggle Minimap</div>
+            <div>Ctrl+Space: Snippets • Shift+Alt+F: Format</div>
+          </div>
         </div>
       </div>
 
