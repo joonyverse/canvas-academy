@@ -28,14 +28,15 @@ const ExampleList: React.FC<ExampleListProps> = ({ selectedExample, onExampleSel
 
   return (
     <div className="bg-white border-r border-gray-300 h-full overflow-y-auto">
-      <div className="px-4 py-3 border-b border-gray-300 h-12 flex items-center">
-        <div>
-          <h2 className="text-sm font-bold text-gray-900">Examples</h2>
-          <p className="text-xs text-gray-600">Choose an example to get started</p>
+      <div className="px-4 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <h2 className="text-lg font-semibold text-gray-900">Canvas Examples</h2>
         </div>
+        <p className="text-sm text-gray-600 mt-1">Interactive tutorials to master Canvas API</p>
       </div>
 
-      <div className="p-4 space-y-4">
+      <div className="p-3 space-y-3">
         {categories.map(category => {
           const Icon = iconMap[category.icon as keyof typeof iconMap];
           const categoryExamples = examples.filter(ex => ex.category === category.id);
@@ -45,11 +46,16 @@ const ExampleList: React.FC<ExampleListProps> = ({ selectedExample, onExampleSel
             <div key={category.id} className="space-y-2">
               <button
                 onClick={() => setExpandedCategory(isExpanded ? '' : category.id)}
-                className="w-full flex items-center justify-between p-3 text-left bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-all duration-200"
+                className="w-full flex items-center justify-between p-2.5 text-left bg-white rounded-lg border border-gray-200 hover:border-blue-200 hover:bg-blue-50 transition-all duration-200 shadow-sm"
               >
-                <div className="flex items-center space-x-3">
-                  <Icon className="w-5 h-5 text-gray-600" />
-                  <h3 className="font-medium text-gray-900">{category.name}</h3>
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                    <Icon className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900 text-sm">{category.name}</h3>
+                    <p className="text-xs text-gray-500">{categoryExamples.length} examples</p>
+                  </div>
                 </div>
                 <ChevronRight
                   className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''
@@ -58,19 +64,19 @@ const ExampleList: React.FC<ExampleListProps> = ({ selectedExample, onExampleSel
               </button>
 
               {isExpanded && (
-                <div className="ml-4 space-y-2">
+                <div className="ml-2 space-y-1.5">
                   {categoryExamples.map(example => (
                     <button
                       key={example.id}
                       onClick={() => onExampleSelect(example)}
-                      className={`w-full text-left p-3 rounded-lg border transition-all duration-200 ${selectedExample?.id === example.id
-                        ? 'bg-blue-50 border-blue-200 shadow-lg'
-                        : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                      className={`w-full text-left p-2.5 rounded-md border transition-all duration-200 ${selectedExample?.id === example.id
+                        ? 'bg-blue-50 border-blue-200 shadow-sm'
+                        : 'bg-gray-50 border-gray-100 hover:bg-gray-100 hover:border-gray-200'
                         }`}
                     >
                       <div className="flex items-center justify-between">
-                        <h4 className="font-medium text-gray-900">{example.title}</h4>
-                        <span className={`px-2 py-1 text-xs font-medium rounded border ${difficultyColors[example.difficulty]}`}>
+                        <h4 className="font-medium text-gray-900 text-sm leading-tight">{example.title}</h4>
+                        <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${difficultyColors[example.difficulty]}`}>
                           {example.difficulty}
                         </span>
                       </div>
