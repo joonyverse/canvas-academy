@@ -85,19 +85,21 @@ function App() {
               currentCode={currentCode}
             />
 
-            <Layout
-              panelState={panelState}
-              exampleState={exampleState}
-              project={project}
-              currentCode={currentCode}
-              onFileSelect={selectFile}
-              onFileCreate={(name, type, parentId) => createFile(name, type, parentId)}
-              onFileRename={renameFile}
-              onFileDelete={deleteFile}
-              onFolderToggle={toggleFolder}
-              onCodeChange={handleCodeChange}
-              onProjectLoad={handleProjectLoad}
-            />
+            <div className="flex-1 overflow-hidden">
+              <Layout
+                panelState={panelState}
+                exampleState={exampleState}
+                project={project}
+                currentCode={currentCode}
+                onFileSelect={selectFile}
+                onFileCreate={(name, type, parentId) => createFile(name, type, parentId)}
+                onFileRename={renameFile}
+                onFileDelete={deleteFile}
+                onFolderToggle={toggleFolder}
+                onCodeChange={handleCodeChange}
+                onProjectLoad={handleProjectLoad}
+              />
+            </div>
 
             <StatusBar selectedExample={exampleState.selectedExample} />
 

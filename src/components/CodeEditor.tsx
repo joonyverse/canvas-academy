@@ -576,7 +576,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
         </div>
       )}
 
-      <div className="flex-1 relative">
+      <div className="flex-1 relative overflow-hidden">
         <Editor
           height="100%"
           defaultLanguage="javascript"
@@ -595,7 +595,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
               size: 'proportional', // 'proportional' | 'fill' | 'fit'
               autohide: false // 항상 표시
             },
-            scrollBeyondLastLine: false,
+            scrollBeyondLastLine: true,
+            padding: {
+              top: 0,
+              bottom: 80 // Increased bottom padding to prevent overlap with help text
+            },
             fontSize: editorSettings.fontSize,
             fontFamily: 'Monaco, Menlo, "Courier New", monospace',
             wordWrap: editorSettings.wordWrap,
@@ -621,7 +625,11 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
               horizontalScrollbarSize: 12,
               // 미니맵이 켜져있을 때 스크롤바 조정
               handleMouseWheel: true,
-              useShadows: false
+              useShadows: false,
+              verticalHasArrows: false,
+              horizontalHasArrows: false,
+              verticalSliderSize: 12,
+              horizontalSliderSize: 12
             },
             // Advanced features
             suggest: {
@@ -677,8 +685,8 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onChange, onRun, onReset 
           className="cursor-text"
         />
 
-        {/* Keyboard shortcuts help */}
-        <div className="absolute bottom-2 right-2 text-xs text-gray-500 bg-white bg-opacity-90 px-2 py-1 rounded shadow-sm max-w-md">
+        {/* Keyboard shortcuts help - positioned to avoid overlap */}
+        <div className="absolute bottom-4 right-4 text-xs text-gray-500 bg-white bg-opacity-90 px-3 py-2 rounded-md shadow-lg max-w-md border border-gray-200 pointer-events-none backdrop-blur-sm z-10">
           <div className="space-y-0.5">
             <div>Ctrl+Enter: Run • Ctrl+R: Reset • Ctrl+M: Toggle Minimap</div>
             <div>Ctrl+Space: Snippets • Shift+Alt+F: Format</div>

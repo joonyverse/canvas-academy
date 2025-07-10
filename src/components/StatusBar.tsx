@@ -24,7 +24,7 @@ const StatusBar: React.FC<StatusBarProps> = ({ selectedExample }) => {
   };
 
   return (
-    <div className="bg-gray-100 text-gray-700 text-xs flex items-center justify-between px-3 py-2 border-t border-gray-300 h-10">
+    <div className="bg-gray-100 text-gray-700 text-xs flex items-center justify-between px-3 py-2 border-t border-gray-300 h-10 flex-shrink-0">
       {/* Left side - Project/Example info */}
       <div className="flex items-center space-x-4">
         {activeProject ? (

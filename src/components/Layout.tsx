@@ -145,7 +145,7 @@ const Layout: React.FC<LayoutProps> = ({
           defaultSize={getCodePanelSize()} 
           minSize={PANEL_SIZES.MIN_MAIN_PANEL}
         >
-          <div className="h-full bg-white border-r border-gray-200">
+          <div className="h-full bg-white border-r border-gray-200 flex flex-col">
             <CodeEditor
               code={currentCode}
               onChange={onCodeChange}
